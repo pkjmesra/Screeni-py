@@ -59,17 +59,18 @@ class StockConsumer(multiprocessing.Process):
             sys.exit(0)
 
     def screenStocks(self, executeOption, reversalOption, maLength, daysForLowestVolume, minRSI, maxRSI, respChartPattern, insideBarToLookback, totalSymbols,
-                     configManager, fetcher, screener, candlePatterns, stock, newlyListedOnly, downloadOnly, printCounter=False):
+                     configManager, fetcher, screener, candlePatterns, stock, newlyListedOnly, downloadOnly, volumeRatio, printCounter=False):
         screenResults = pd.DataFrame(columns=[
-            'Stock', 'Consolidating', 'Breaking-Out', 'MA-Signal', 'Volume', 'LTP', 'RSI', 'Trend', 'Pattern'])
+            'Stock', 'Consolidating', 'Breaking-Out', 'MA-Signal', 'Volume', 'LTP', 'RSI', 'Trend', 'Pattern', 'CCI'])
         screeningDictionary = {'Stock': "", 'Consolidating': "",  'Breaking-Out': "",
-                               'MA-Signal': "", 'Volume': "", 'LTP': 0, 'RSI': 0, 'Trend': "", 'Pattern': ""}
+                               'MA-Signal': "", 'Volume': "", 'LTP': 0, 'RSI': 0, 'Trend': "", 'Pattern': "", 'CCI': 0}
         saveDictionary = {'Stock': "", 'Consolidating': "", 'Breaking-Out': "",
-                          'MA-Signal': "", 'Volume': "", 'LTP': 0, 'RSI': 0, 'Trend': "", 'Pattern': ""}
+                          'MA-Signal': "", 'Volume': "", 'LTP': 0, 'RSI': 0, 'Trend': "", 'Pattern': "", 'CCI': 0}
 
         try:
             period = configManager.period
-
+            if volumeRatio <= 0:
+                volumeRatio = configManager.volumeRatio
             # Data download adjustment for Newly Listed only feature
             if newlyListedOnly:
                 if int(configManager.period[:-1]) > 250:
@@ -121,7 +122,7 @@ class StockConsumer(multiprocessing.Process):
                 isMaReversal = screener.validateMovingAverages(
                     processedData, screeningDictionary, saveDictionary, maRange=1.25)
                 isVolumeHigh = screener.validateVolume(
-                    processedData, screeningDictionary, saveDictionary, volumeRatio=configManager.volumeRatio)
+                    processedData, screeningDictionary, saveDictionary, volumeRatio= volumeRatio)
                 isBreaking = screener.findBreakout(
                     processedData, screeningDictionary, saveDictionary, daysToLookback=configManager.daysToLookback)
                 isLtpValid = screener.validateLTP(
@@ -131,6 +132,8 @@ class StockConsumer(multiprocessing.Process):
                 else:
                     isLowestVolume = False
                 isValidRsi = screener.validateRSI(
+                    processedData, screeningDictionary, saveDictionary, minRSI, maxRSI)
+                isValidCci = screener.validateCCI(
                     processedData, screeningDictionary, saveDictionary, minRSI, maxRSI)
                 try:
                     with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
@@ -233,6 +236,12 @@ class StockConsumer(multiprocessing.Process):
                         if isBuyingTrendline:
                             self.screenResultsCounter.value += 1
                             return screeningDictionary, saveDictionary
+                    if executeOption == 15 and isLtpValid and isValidCci:
+                        self.screenResultsCounter.value += 1
+                        return screeningDictionary, saveDictionary
+                    if executeOption == 16 and isVolumeHigh:
+                        self.screenResultsCounter.value += 1
+                        return screeningDictionary, saveDictionary
         except KeyboardInterrupt:
             # Capturing Ctr+C Here isn't a great idea
             pass

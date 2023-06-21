@@ -62,6 +62,8 @@ class tools:
         rsi = talib.RSI(data['Close'], timeperiod=14)
         data.insert(8,'VolMA',vol['Volume'])
         data.insert(9,'RSI',rsi)
+        cci = talib.CCI(data['High'], data['Low'], data['Close'], timeperiod=14)
+        data.insert(10,'CCI',cci)
         data = data[::-1]               # Reverse the dataframe
         # data = data.fillna(0)
         # data = data.replace([np.inf, -np.inf], 0)
@@ -294,6 +296,21 @@ class tools:
         screenDict['RSI'] = colorText.BOLD + colorText.FAIL + str(rsi) + colorText.END
         return False
 
+    # validate if CCI is within given range
+    def validateCCI(self, data, screenDict, saveDict, minCCI, maxCCI):
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        cci = int(data.head(1)['CCI'][0])
+        saveDict['CCI'] = cci
+        if(cci <= minCCI or cci >= maxCCI):
+            if(cci <= minCCI):
+                screenDict['CCI'] = colorText.BOLD + colorText.GREEN + str(cci) + colorText.END
+            else:
+                screenDict['CCI'] = colorText.BOLD + colorText.FAIL + str(cci) + colorText.END
+            return True
+        screenDict['CCI'] = colorText.BOLD + colorText.FAIL + str(cci) + colorText.END
+        return False
+    
     # Find out trend for days to lookback
     def findTrend(self, data, screenDict, saveDict, daysToLookback=None,stockName=""):
         if daysToLookback is None:
@@ -401,7 +418,7 @@ class tools:
             maRev = talib.EMA(data['Close'],timeperiod=maLength)
         else:
             maRev = talib.MA(data['Close'],timeperiod=maLength)
-        data.insert(10,'maRev',maRev)
+        data.insert(11,'maRev',maRev)
         data = data[::-1].head(3)
         if data.equals(data[(data.Close >= (data.maRev - (data.maRev*percentage))) & (data.Close <= (data.maRev + (data.maRev*percentage)))]) and data.head(1)['Close'][0] >= data.head(1)['maRev'][0]:
             screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + f'Reversal-{maLength}MA' + colorText.END

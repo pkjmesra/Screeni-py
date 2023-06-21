@@ -126,6 +126,8 @@ def initExecution():
     9 > Show user configuration
     10 > Show Last Screened Results
     11 > Help / About Developer
+    15 > Screen for the stocks with CCI outside of the given range
+    16 > Screen for the volume gainer stocks
     12 > Exit''' + colorText.END
             )
     try:
@@ -136,7 +138,7 @@ def initExecution():
             if executeOption == '':
                 executeOption = 0
             executeOption = int(executeOption)
-            if(executeOption < 0 or executeOption > 14):
+            if(executeOption < 0 or executeOption > 16):
                 raise ValueError
         else:
             executeOption = 0
@@ -169,9 +171,9 @@ def main(testing=False, testBuild=False, downloadOnly=False):
     reversalOption = None
 
     screenResults = pd.DataFrame(columns=[
-                                 'Stock', 'Consolidating', 'Breaking-Out', 'LTP', 'Volume', 'MA-Signal', 'RSI', 'Trend', 'Pattern'])
+                                 'Stock', 'Consolidating', 'Breaking-Out', 'LTP', 'Volume', 'MA-Signal', 'RSI', 'Trend', 'Pattern', 'CCI'])
     saveResults = pd.DataFrame(columns=[
-                               'Stock', 'Consolidating', 'Breaking-Out', 'LTP', 'Volume', 'MA-Signal', 'RSI', 'Trend', 'Pattern'])
+                               'Stock', 'Consolidating', 'Breaking-Out', 'LTP', 'Volume', 'MA-Signal', 'RSI', 'Trend', 'Pattern', 'CCI'])
 
     
     if testBuild:
@@ -185,7 +187,7 @@ def main(testing=False, testBuild=False, downloadOnly=False):
             input(colorText.BOLD + colorText.FAIL +
                 "[+] Press any key to Exit!" + colorText.END)
             sys.exit(0)
-
+    volumeRatio = configManager.volumeRatio
     if executeOption == 4:
         try:
             daysForLowestVolume = int(input(colorText.BOLD + colorText.WARN +
@@ -228,7 +230,22 @@ def main(testing=False, testBuild=False, downloadOnly=False):
         input(colorText.BOLD + colorText.FAIL +
               "[+] Press any key to Exit!" + colorText.END)
         sys.exit(0)
-
+    if executeOption == 15:
+        minRSI, maxRSI = Utility.tools.promptCCIValues()
+        if (not minRSI and not maxRSI):
+            print(colorText.BOLD + colorText.FAIL +
+                  '\n[+] Error: Invalid values for CCI! Values should be in range of -300 to 500. Screening aborted.' + colorText.END)
+            input('')
+            main()
+    if executeOption == 16:
+        volumeRatio = Utility.tools.promptVolumeMultiplier()
+        if (volumeRatio <= 0):
+            print(colorText.BOLD + colorText.FAIL +
+                  '\n[+] Error: Invalid values for Volume Ratio! Value should be a positive number. Screening aborted.' + colorText.END)
+            input('')
+            main()
+        else:
+            configManager.volumeRatio = float(volumeRatio)
     if tickerOption == 'W' or tickerOption == 'N' or tickerOption == 'E' or (tickerOption >= 0 and tickerOption < 15):
         configManager.getConfig(ConfigManager.parser)
         try:
@@ -293,7 +310,7 @@ def main(testing=False, testBuild=False, downloadOnly=False):
               "[+] Starting Stock Screening.. Press Ctrl+C to stop!\n")
 
         items = [(executeOption, reversalOption, maLength, daysForLowestVolume, minRSI, maxRSI, respChartPattern, insideBarToLookback, len(listStockCodes),
-                  configManager, fetcher, screener, candlePatterns, stock, newlyListedOnly, downloadOnly)
+                  configManager, fetcher, screener, candlePatterns, stock, newlyListedOnly, downloadOnly, volumeRatio)
                  for stock in listStockCodes]
 
         tasks_queue = multiprocessing.JoinableQueue()
@@ -371,7 +388,7 @@ def main(testing=False, testBuild=False, downloadOnly=False):
             except Exception as e:
                 break
 
-        screenResults.sort_values(by=['Stock'], ascending=True, inplace=True)
+        screenResults.sort_values(by=['Volume'], ascending=False, inplace=True)
         saveResults.sort_values(by=['Stock'], ascending=True, inplace=True)
         screenResults.set_index('Stock', inplace=True)
         saveResults.set_index('Stock', inplace=True)

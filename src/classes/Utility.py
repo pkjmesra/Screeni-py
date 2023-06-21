@@ -220,6 +220,27 @@ class tools:
         except ValueError:
             return (0, 0)
 
+    # Prompt for asking CCI
+    def promptCCIValues():
+        try:
+            minRSI, maxRSI = int(input(colorText.BOLD + colorText.WARN + "\n[+] Enter Min CCI value: " + colorText.END)), int(
+                input(colorText.BOLD + colorText.WARN + "[+] Enter Max CCI value: " + colorText.END))
+            if (minRSI <= maxRSI):
+                return (minRSI, maxRSI)
+            raise ValueError
+        except ValueError:
+            return (-100, 100)
+
+    # Prompt for asking Volume ratio
+    def promptVolumeMultiplier():
+        try:
+            volumeRatio = int(input(colorText.BOLD + colorText.WARN + "\n[+] Enter Min Volume ratio value (Default = 2): " + colorText.END))
+            if (volumeRatio > 0):
+                return volumeRatio
+            raise ValueError
+        except ValueError:
+            return 2
+
     # Prompt for Reversal screening
     def promptReversalScreening():
         try:
