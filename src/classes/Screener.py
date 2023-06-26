@@ -302,7 +302,7 @@ class tools:
         data = data.replace([np.inf, -np.inf], 0)
         cci = int(data.head(1)['CCI'][0])
         saveDict['CCI'] = cci
-        if(cci <= minCCI or cci >= maxCCI):
+        if((cci <= minCCI or cci >= maxCCI) and ("Up" in saveDict['Trend'])):
             if(cci <= minCCI):
                 screenDict['CCI'] = colorText.BOLD + colorText.GREEN + str(cci) + colorText.END
             else:

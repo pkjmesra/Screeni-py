@@ -133,8 +133,6 @@ class StockConsumer(multiprocessing.Process):
                     isLowestVolume = False
                 isValidRsi = screener.validateRSI(
                     processedData, screeningDictionary, saveDictionary, minRSI, maxRSI)
-                isValidCci = screener.validateCCI(
-                    processedData, screeningDictionary, saveDictionary, minRSI, maxRSI)
                 try:
                     with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
                         currentTrend = screener.findTrend(
@@ -146,6 +144,8 @@ class StockConsumer(multiprocessing.Process):
                 except np.RankWarning:
                     screeningDictionary['Trend'] = 'Unknown'
                     saveDictionary['Trend'] = 'Unknown'
+                isValidCci = screener.validateCCI(
+                    processedData, screeningDictionary, saveDictionary, minRSI, maxRSI)
                 isCandlePattern = candlePatterns.findPattern(
                     processedData, screeningDictionary, saveDictionary)
                 
@@ -236,10 +236,10 @@ class StockConsumer(multiprocessing.Process):
                         if isBuyingTrendline:
                             self.screenResultsCounter.value += 1
                             return screeningDictionary, saveDictionary
-                    if executeOption == 15 and isLtpValid and isValidCci:
+                    if executeOption == 8 and isLtpValid and isValidCci:
                         self.screenResultsCounter.value += 1
                         return screeningDictionary, saveDictionary
-                    if executeOption == 16 and isVolumeHigh:
+                    if executeOption == 9 and isVolumeHigh:
                         self.screenResultsCounter.value += 1
                         return screeningDictionary, saveDictionary
         except KeyboardInterrupt:

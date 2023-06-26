@@ -122,13 +122,32 @@ def initExecution():
     5 > Screen for the stocks with RSI
     6 > Screen for the stocks showing Reversal Signals
     7 > Screen for the stocks making Chart Patterns
-    8 > Edit user configuration
-    9 > Show user configuration
-    10 > Show Last Screened Results
-    11 > Help / About Developer
-    15 > Screen for the stocks with CCI outside of the given range
-    16 > Screen for the volume gainer stocks
-    12 > Exit''' + colorText.END
+    8 > Screen for the stocks with CCI outside of the given range
+    9 > Screen for the volume gainer stocks
+
+    10 > Intraday Momentum Build-up stocks
+    11 > Short term bullish stocks
+    12 > 15 Minute Price & Volume breakout
+    13 > Bullish RSI & MACD Intraday
+    14 > NR4 Day
+    15 > 52 week low breakout
+    16 > 10 days low breakout
+    17 > 52 week high breakout
+    18 > Bullish Aroon Crossover
+    19 > MACD Historgram cross below 0
+    20 > RSI entering bullish territory
+    21 > Bearish CCI crossover
+    22 > RSI crosses above 30 and price higher than psar
+    23 > Closing at least 2% up since last 3 days
+    24 > Extremely bullish daily close
+    25 > Rising RSI
+    26 > Dividend Yield
+
+    40 > Edit user configuration
+    41 > Show user configuration
+    42 > Show Last Screened Results
+    43 > Help / About Developer
+    44 > Exit''' + colorText.END
             )
     try:
         if tickerOption and tickerOption != 'W':
@@ -138,7 +157,7 @@ def initExecution():
             if executeOption == '':
                 executeOption = 0
             executeOption = int(executeOption)
-            if(executeOption < 0 or executeOption > 16):
+            if(executeOption < 0 or executeOption > 44):
                 raise ValueError
         else:
             executeOption = 0
@@ -215,29 +234,13 @@ def main(testing=False, testBuild=False, downloadOnly=False):
         if insideBarToLookback is None:
             main()
     if executeOption == 8:
-        configManager.setConfig(ConfigManager.parser)
-        main()
-    if executeOption == 9:
-        configManager.showConfigFile()
-        main()
-    if executeOption == 10:
-        Utility.tools.getLastScreenedResults()
-        main()
-    if executeOption == 11:
-        Utility.tools.showDevInfo()
-        main()
-    if executeOption == 12:
-        input(colorText.BOLD + colorText.FAIL +
-              "[+] Press any key to Exit!" + colorText.END)
-        sys.exit(0)
-    if executeOption == 15:
         minRSI, maxRSI = Utility.tools.promptCCIValues()
         if (not minRSI and not maxRSI):
             print(colorText.BOLD + colorText.FAIL +
                   '\n[+] Error: Invalid values for CCI! Values should be in range of -300 to 500. Screening aborted.' + colorText.END)
             input('')
             main()
-    if executeOption == 16:
+    if executeOption == 9:
         volumeRatio = Utility.tools.promptVolumeMultiplier()
         if (volumeRatio <= 0):
             print(colorText.BOLD + colorText.FAIL +
@@ -246,6 +249,27 @@ def main(testing=False, testBuild=False, downloadOnly=False):
             main()
         else:
             configManager.volumeRatio = float(volumeRatio)
+    if executeOption >= 10 and executeOption <= 39:
+        print(colorText.BOLD + colorText.FAIL + '\n[+] Error: Option 10 to 39 Not implemented yet!' + colorText.END) 
+        input('')
+        main()
+    if executeOption == 40:
+        configManager.setConfig(ConfigManager.parser)
+        main()
+    if executeOption == 41:
+        configManager.showConfigFile()
+        main()
+    if executeOption == 42:
+        Utility.tools.getLastScreenedResults()
+        main()
+    if executeOption == 43:
+        Utility.tools.showDevInfo()
+        main()
+    if executeOption == 44:
+        input(colorText.BOLD + colorText.FAIL +
+              "[+] Press any key to Exit!" + colorText.END)
+        sys.exit(0)
+
     if tickerOption == 'W' or tickerOption == 'N' or tickerOption == 'E' or (tickerOption >= 0 and tickerOption < 15):
         configManager.getConfig(ConfigManager.parser)
         try:
