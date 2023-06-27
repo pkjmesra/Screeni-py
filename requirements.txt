@@ -23,7 +23,7 @@ tabulate
 yfinance #==0.1.87
 alive-progress #==1.6.2
 Pillow
-scikit-learn #==1.1.1
+# scikit-learn #==1.1.1
 tensorflow #==2.9.2
 joblib
 altgraph # Installed as dependency for pyinstaller
@@ -54,7 +54,7 @@ pywin32-ctypes # Installed as dependency for pyinstaller
 requests # Installed as dependency for yfinance, cachecontrol
 setuptools # Installed as dependency for pyinstaller
 six # Installed as dependency for cycler, nsetools, packaging, retrying, python-dateutil, html5lib
-sklearn
+#sklearn
 toml # Installed as dependency for pep517, pytest
 urllib3 # Installed as dependency for requests
 webencodings # Installed as dependency for html5lib
