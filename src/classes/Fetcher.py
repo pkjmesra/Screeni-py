@@ -75,6 +75,8 @@ class tools:
                     listStockCodes.append(row[2])
         except Exception as error:
             print(error)
+            import traceback
+            print(traceback.format_exc())
 
         return listStockCodes
 
