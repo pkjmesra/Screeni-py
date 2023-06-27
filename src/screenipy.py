@@ -176,8 +176,12 @@ def main(testing=False, testBuild=False, downloadOnly=False):
     global screenCounter, screenResultsCounter, stockDict, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly
     screenCounter = multiprocessing.Value('i', 1)
     screenResultsCounter = multiprocessing.Value('i', 0)
-    keyboardInterruptEvent = multiprocessing.Manager().Event()
-
+    keyboardInterruptEvent
+    try:
+        keyboardInterruptEvent = multiprocessing.Manager().Event()
+    except:
+        pass
+    
     if stockDict is None:
         stockDict = multiprocessing.Manager().dict()
         loadCount = 0
