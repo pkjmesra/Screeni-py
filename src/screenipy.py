@@ -185,6 +185,7 @@ def main(testing=False, testBuild=False, downloadOnly=False):
                 loadCount = 0
             keyboardInterruptEvent = multiprocessing.Manager().Event()
         except:
+            stockDict = { }
             pass
 
     minRSI = 0
