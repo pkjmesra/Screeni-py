@@ -180,13 +180,12 @@ def main(testing=False, testBuild=False, downloadOnly=False):
     stockDict
     if __name__ == "__main__":
         try:
+            if stockDict is None:
+                stockDict = multiprocessing.Manager().dict()
+                loadCount = 0
             keyboardInterruptEvent = multiprocessing.Manager().Event()
         except:
             pass
-        
-        if stockDict is None:
-            stockDict = multiprocessing.Manager().dict()
-            loadCount = 0
 
     minRSI = 0
     maxRSI = 100
