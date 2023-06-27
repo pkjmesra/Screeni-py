@@ -9,7 +9,6 @@ import sys
 import math
 import numpy as np
 import pandas as pd
-import talib
 import joblib
 import keras
 import classes.Utility as Utility
@@ -18,7 +17,7 @@ from scipy.signal import argrelextrema
 from scipy.stats import linregress
 from classes.ColorText import colorText
 from classes.SuppressOutput import SuppressOutput
-
+from classes.Talib import talib
 
 # Exception for newly listed stocks with candle nos < daysToLookback
 class StockDataNotAdequate(Exception):
