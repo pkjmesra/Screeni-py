@@ -11,8 +11,8 @@ import numpy as np
 import pandas as pd
 import joblib
 import classes.Utility as Utility
-from sklearn.preprocessing import StandardScaler
-from scipy.signal import argrelextrema
+#from sklearn.preprocessing import StandardScaler
+#from scipy.signal import argrelextrema
 #from scipy.stats import linregress
 from classes.ColorText import colorText
 from classes.SuppressOutput import SuppressOutput
