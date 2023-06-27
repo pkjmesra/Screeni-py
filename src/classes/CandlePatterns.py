@@ -6,7 +6,7 @@
 '''
 
 import pandas as pd
-import talib
+from classes.Talib import talib
 from classes.ColorText import colorText
 
 class CandlePatterns:

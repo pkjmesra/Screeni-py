@@ -10,11 +10,10 @@ import math
 import numpy as np
 import pandas as pd
 import joblib
-import keras
 import classes.Utility as Utility
 from sklearn.preprocessing import StandardScaler
 from scipy.signal import argrelextrema
-from scipy.stats import linregress
+#from scipy.stats import linregress
 from classes.ColorText import colorText
 from classes.SuppressOutput import SuppressOutput
 from classes.Talib import talib
