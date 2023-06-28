@@ -166,6 +166,7 @@ class StockConsumer(multiprocessing.Process):
                         isNR = screener.validateNarrowRange(processedData, screeningDictionary, saveDictionary)
                 
                 isMomentum = screener.validateMomentum(processedData, screeningDictionary, saveDictionary)
+                isPriceRisingByAtLeast2Percent = screener.validatePriceRisingByAtLeast2Percent(processedData)
                 
                 isVSA = False
                 if not (executeOption == 7 and respChartPattern < 3):
@@ -240,6 +241,9 @@ class StockConsumer(multiprocessing.Process):
                         self.screenResultsCounter.value += 1
                         return screeningDictionary, saveDictionary
                     if executeOption == 9 and isVolumeHigh:
+                        self.screenResultsCounter.value += 1
+                        return screeningDictionary, saveDictionary
+                    if executeOption == 10 and isPriceRisingByAtLeast2Percent:
                         self.screenResultsCounter.value += 1
                         return screeningDictionary, saveDictionary
         except KeyboardInterrupt:

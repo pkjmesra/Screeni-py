@@ -409,6 +409,27 @@ class tools:
             traceback.print_exc()
             return False
 
+    # Validate if the stock prices are at least rising by 2% for the last 3 sessions
+    def validatePriceRisingByAtLeast2Percent(self, data):
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        data = data.head(4)
+        for row in data.iterrows():
+            # All candles should be Green and NOT Circuits
+            if row[1]['Close'].item() <= row[1]['Open'].item():
+                return False
+        day0 = data.iloc[0]['Close'].item()
+        dayMinus1 = data.iloc[1]['Close'].item()
+        dayMinus2 = data.iloc[2]['Close'].item()
+        dayMinus3 = data.iloc[3]['Close'].item()
+        percent3 = round((dayMinus2 - dayMinus3)*100/dayMinus3,2)
+        percent2 = round((dayMinus1 - dayMinus2)*100/dayMinus2,2)
+        percent1 = round((dayMinus0 - dayMinus1)*100/dayMinus1,2)
+        
+        if percent1 >= 2 and percent2 >= 2 and percent3 >= 2:
+            return True and self.getCandleType(data.head(1))
+        return False
+        
     # Find stock reversing at given MA
     def findReversalMA(self, data, screenDict, saveDict, maLength, percentage=0.015):
         if maLength is None:
