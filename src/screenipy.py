@@ -112,20 +112,20 @@ def initExecution():
 
     if tickerOption and tickerOption != 'W':
         print(colorText.BOLD + colorText.WARN +
-            '\n[+] Select a Critera for Stock Screening: ' + colorText.END)
+            '\n[+] Select a Criterion for Stock Screening: ' + colorText.END)
         print(colorText.BOLD + '''
-    0 > Full Screening (Shows Technical Parameters without Any Criteria)
-    1 > Screen stocks for Breakout or Consolidation
-    2 > Screen for the stocks with recent Breakout & Volume
-    3 > Screen for the Consolidating stocks
-    4 > Screen for the stocks with Lowest Volume in last 'N'-days (Early Breakout Detection)
-    5 > Screen for the stocks with RSI
-    6 > Screen for the stocks showing Reversal Signals
-    7 > Screen for the stocks making Chart Patterns
-    8 > Screen for the stocks with CCI outside of the given range
-    9 > Screen for the volume gainer stocks
+    0 > Full Screening (Shows Technical Parameters without any criterion)
+    1 > Probable Breakouts
+    2 > Recent Breakouts & Volumes
+    3 > Consolidating stocks
+    4 > Lowest Volume in last 'N'-days (Early Breakout Detection)
+    5 > RSI screening
+    6 > Reversal Signals
+    7 > Stocks making Chart Patterns
+    8 > CCI outside of the given range
+    9 > Volume gainers
 
-    10 > Intraday Momentum Build-up stocks
+    10 > Closing at least 2% up since last 3 days
     11 > Short term bullish stocks
     12 > 15 Minute Price & Volume breakout
     13 > Bullish RSI & MACD Intraday
@@ -138,7 +138,7 @@ def initExecution():
     20 > RSI entering bullish territory
     21 > Bearish CCI crossover
     22 > RSI crosses above 30 and price higher than psar
-    23 > Closing at least 2% up since last 3 days
+    23 > Intraday Momentum Build-up stocks
     24 > Extremely bullish daily close
     25 > Rising RSI
     26 > Dividend Yield
@@ -249,8 +249,8 @@ def main(testing=False, testBuild=False, downloadOnly=False):
             main()
         else:
             configManager.volumeRatio = float(volumeRatio)
-    if executeOption >= 10 and executeOption <= 39:
-        print(colorText.BOLD + colorText.FAIL + '\n[+] Error: Option 10 to 39 Not implemented yet!' + colorText.END) 
+    if executeOption >= 11 and executeOption <= 39:
+        print(colorText.BOLD + colorText.FAIL + '\n[+] Error: Option 11 to 39 Not implemented yet!' + colorText.END) 
         input('')
         main()
     if executeOption == 40:
