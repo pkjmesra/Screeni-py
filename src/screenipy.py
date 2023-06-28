@@ -68,8 +68,10 @@ except KeyError:
 def initExecution():
     global newlyListedOnly
     print(colorText.BOLD + colorText.WARN +
-          '[+] Select an Index for Screening: ' + colorText.END)
+          '[+] Select an Index for Screening:' + colorText.END)
+    toggleText = ' T > Toggle between long-term (Default)' + colorText.FAIL + ' [Current]'+ colorText.END + ' and Intraday user configuration\n' if not configManager.isIntradayConfig() else 'T > Toggle between long-term (Default) and Intraday' + colorText.FAIL + ' [Current]' +  colorText.END + ' user configuration\n'
     print(colorText.BOLD + '''
+    ''' + toggleText + '''
      W > Screen stocks from my own Watchlist
      N > Nifty Prediction using Artifical Intelligence (Use for Gap-Up/Gap-Down/BTST/STBT)
      E > Live Index Scan : 5 EMA for Intraday
@@ -91,6 +93,13 @@ def initExecution():
         # elif tickerOption == 'W' or tickerOption == 'w' or tickerOption == 'N' or tickerOption == 'n' or tickerOption == 'E' or tickerOption == 'e':
         elif not tickerOption.isnumeric():
             tickerOption = tickerOption.upper()
+            if tickerOption == 'T':
+                configManager.toggleConfig()
+                print(colorText.BOLD + colorText.GREEN +
+              '\nConfiguration toggled to duration: ' + str(configManager.duration) + ' and period: ' + str(configManager.period) + colorText.END)
+                sleep(3)
+                Utility.tools.clearScreen()
+                return initExecution()
         else:
             tickerOption = int(tickerOption)
             if(tickerOption < 0 or tickerOption > 14):

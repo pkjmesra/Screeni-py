@@ -7,6 +7,7 @@
 
 import sys
 import os
+import string
 import glob
 import configparser
 from datetime import date
@@ -46,6 +47,10 @@ class tools:
 
     def setConfig(self, parser, default=False, showFileCreatedText=True):
         if default:
+            try:
+                parser.remove_section('config')
+            except:
+                pass
             parser.add_section('config')
             parser.set('config', 'period', self.period)
             parser.set('config', 'daysToLookback', str(self.daysToLookback))
@@ -55,10 +60,10 @@ class tools:
             parser.set('config', 'volumeRatio', str(self.volumeRatio))
             parser.set('config', 'consolidationPercentage',
                        str(self.consolidationPercentage))
-            parser.set('config', 'shuffle', 'y')
-            parser.set('config', 'cacheStockData', 'y')
-            parser.set('config', 'onlyStageTwoStocks', 'y')
-            parser.set('config', 'useEMA', 'n')
+            parser.set('config', 'shuffle', 'y' if self.shuffleEnabled else 'n')
+            parser.set('config', 'cacheStockData', 'y' if self.cacheEnabled else 'n')
+            parser.set('config', 'onlyStageTwoStocks', 'y' if self.stageTwo else 'n')
+            parser.set('config', 'useEMA', 'y' if self.useEMA else 'n')
             try:
                 fp = open('screenipy.ini', 'w')
                 parser.write(fp)
@@ -167,6 +172,22 @@ class tools:
         else:
             self.setConfig(parser, default=True)
 
+    # Toggle the duration and period for use in intraday and swing trading
+    def toggleConfig(self):
+        self.getConfig(parser)
+        if not self.isIntradayConfig():
+            self.period = '1d'
+            self.duration = '1m'
+            self.cacheEnabled = False
+        else:
+            self.period = '365d'
+            self.duration = '1d'
+            self.cacheEnabled = True
+        self.setConfig(parser, default=True, showFileCreatedText=False)
+
+    def isIntradayConfig(self):
+        return self.period == '1d' and self.duration[-1] == 'm' and not self.cacheEnabled
+            
     # Print config file
     def showConfigFile(self):
         try:
