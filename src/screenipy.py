@@ -258,8 +258,8 @@ def main(testing=False, testBuild=False, downloadOnly=False):
             main()
         else:
             configManager.volumeRatio = float(volumeRatio)
-    if executeOption >= 11 and executeOption <= 39:
-        print(colorText.BOLD + colorText.FAIL + '\n[+] Error: Option 11 to 39 Not implemented yet!' + colorText.END) 
+    if executeOption >= 12 and executeOption <= 39:
+        print(colorText.BOLD + colorText.FAIL + '\n[+] Error: Option 12 to 39 Not implemented yet! Press any key to continue.' + colorText.END) 
         input('')
         main()
     if executeOption == 40:
@@ -427,16 +427,16 @@ def main(testing=False, testBuild=False, downloadOnly=False):
         saveResults.set_index('Stock', inplace=True)
         screenResults.rename(
             columns={
-                'Trend': f'Trend ({configManager.daysToLookback}Days)',
-                'Breaking-Out': f'Breakout ({configManager.daysToLookback}Days)',
+                'Trend': f'Trend ({configManager.daysToLookback}Periods)',
+                'Breaking-Out': f'Breakout ({configManager.daysToLookback}Periods)',
                 'LTP': 'LTP (% Chng)'
             },
             inplace=True
         )
         saveResults.rename(
             columns={
-                'Trend': f'Trend ({configManager.daysToLookback}Days)',
-                'Breaking-Out': f'Breakout ({configManager.daysToLookback}Days)',
+                'Trend': f'Trend ({configManager.daysToLookback}Periods)',
+                'Breaking-Out': f'Breakout ({configManager.daysToLookback}Periods)',
             },
             inplace=True
         )

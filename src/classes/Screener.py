@@ -51,19 +51,23 @@ class tools:
         if self.configManager.useEMA:
             sma = talib.EMA(data['Close'],timeperiod=50)
             lma = talib.EMA(data['Close'],timeperiod=200)
+            ssma = talib.EMA(data['Close'],timeperiod=9)
             data.insert(6,'SMA',sma)
             data.insert(7,'LMA',lma)
+            data.insert(8,'SSMA',ssma)
         else:
             sma = data.rolling(window=50).mean()
             lma = data.rolling(window=200).mean()
+            ssma = data.rolling(window=9).mean()
             data.insert(6,'SMA',sma['Close'])
             data.insert(7,'LMA',lma['Close'])
+            data.insert(8,'SSMA',ssma['Close'])
         vol = data.rolling(window=20).mean()
         rsi = talib.RSI(data['Close'], timeperiod=14)
-        data.insert(8,'VolMA',vol['Volume'])
-        data.insert(9,'RSI',rsi)
+        data.insert(9,'VolMA',vol['Volume'])
+        data.insert(10,'RSI',rsi)
         cci = talib.CCI(data['High'], data['Low'], data['Close'], timeperiod=14)
-        data.insert(10,'CCI',cci)
+        data.insert(11,'CCI',cci)
         data = data[::-1]               # Reverse the dataframe
         # data = data.fillna(0)
         # data = data.replace([np.inf, -np.inf], 0)
@@ -115,6 +119,17 @@ class tools:
             screenDict['Consolidating'] = colorText.BOLD + colorText.FAIL + "Range = " + str(round((abs((hc-lc)/hc)*100),1)) + "%" + colorText.END
         saveDict['Consolidating'] = str(round((abs((hc-lc)/hc)*100),1))+"%"
         return round((abs((hc-lc)/hc)*100),1)
+
+    # Validate if the stock is bullish in the short term
+    def validateShortTermBullish(self, data, screenDict, saveDict):
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        recent = data.head(1)
+        if(recent['SSMA'][0] > recent['SMA'][0] and recent['Close'][0] > recent['SSMA'][0]):
+            screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + 'Bullish' + colorText.END
+            saveDict['MA-Signal'] = 'Bullish'
+            return True
+        return False
 
     # Validate Moving averages and look for buy/sell signals
     def validateMovingAverages(self, data, screenDict, saveDict, maRange=2.5):
@@ -437,7 +452,7 @@ class tools:
             maRev = talib.EMA(data['Close'],timeperiod=maLength)
         else:
             maRev = talib.MA(data['Close'],timeperiod=maLength)
-        data.insert(11,'maRev',maRev)
+        data.insert(12,'maRev',maRev)
         data = data[::-1].head(3)
         if data.equals(data[(data.Close >= (data.maRev - (data.maRev*percentage))) & (data.Close <= (data.maRev + (data.maRev*percentage)))]) and data.head(1)['Close'][0] >= data.head(1)['maRev'][0]:
             screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + f'Reversal-{maLength}MA' + colorText.END

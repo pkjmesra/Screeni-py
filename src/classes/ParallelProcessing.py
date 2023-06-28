@@ -121,6 +121,8 @@ class StockConsumer(multiprocessing.Process):
                     processedData, screeningDictionary, saveDictionary, percentage=configManager.consolidationPercentage)
                 isMaReversal = screener.validateMovingAverages(
                     processedData, screeningDictionary, saveDictionary, maRange=1.25)
+                isShortTermBullish = screener.validateShortTermBullish(
+                    processedData, screeningDictionary, saveDictionary)
                 isVolumeHigh = screener.validateVolume(
                     processedData, screeningDictionary, saveDictionary, volumeRatio= volumeRatio)
                 isBreaking = screener.findBreakout(
@@ -246,6 +248,9 @@ class StockConsumer(multiprocessing.Process):
                     if executeOption == 10 and isPriceRisingByAtLeast2Percent:
                         self.screenResultsCounter.value += 1
                         return screeningDictionary, saveDictionary
+                    if executeOption == 11 and isShortTermBullish:
+                        self.screenResultsCounter.value += 1
+                        return screeningDictionary, saveDictionary
         except KeyboardInterrupt:
             # Capturing Ctr+C Here isn't a great idea
             pass
@@ -258,6 +263,8 @@ class StockConsumer(multiprocessing.Process):
         except KeyError:
             pass
         except Exception as e:
+            # import traceback
+            # traceback.print_exc()
             if printCounter:
                 print(colorText.FAIL +
                       ("\n[+] Exception Occured while Screening %s! Skipping this stock.." % stock) + colorText.END)
