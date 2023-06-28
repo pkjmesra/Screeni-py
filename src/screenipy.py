@@ -420,7 +420,7 @@ def main(testing=False, testBuild=False, downloadOnly=False):
             columns={
                 'Trend': f'Trend ({configManager.daysToLookback}Days)',
                 'Breaking-Out': f'Breakout ({configManager.daysToLookback}Days)',
-                'LTP': 'LTP (%% Chng)'
+                'LTP': 'LTP (% Chng)'
             },
             inplace=True
         )
