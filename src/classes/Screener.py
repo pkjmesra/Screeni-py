@@ -13,12 +13,13 @@ import talib
 import joblib
 import keras
 import classes.Utility as Utility
+from talib import stream
 from sklearn.preprocessing import StandardScaler
 from scipy.signal import argrelextrema
 from scipy.stats import linregress
+from technical.indicators import ichimoku
 from classes.ColorText import colorText
 from classes.SuppressOutput import SuppressOutput
-
 
 # Exception for newly listed stocks with candle nos < daysToLookback
 class StockDataNotAdequate(Exception):
@@ -68,6 +69,12 @@ class tools:
         data.insert(10,'RSI',rsi)
         cci = talib.CCI(data['High'], data['Low'], data['Close'], timeperiod=14)
         data.insert(11,'CCI',cci)
+        x = len(data["Close"])
+        fastk, fastd = talib.STOCHRSI(data["Close"].values, timeperiod=14, fastk_period=5, fastd_period=3, fastd_matype=0)
+        fk = np.round(fastk[x - 3:], 5)
+        fd = np.round(fastd[x - 3:], 5)
+        data.insert(12,'FASTK',fk)
+        data.insert(13,'FASTD',fd)
         data = data[::-1]               # Reverse the dataframe
         # data = data.fillna(0)
         # data = data.replace([np.inf, -np.inf], 0)
@@ -122,13 +129,32 @@ class tools:
 
     # Validate if the stock is bullish in the short term
     def validateShortTermBullish(self, data, screenDict, saveDict):
+        # https://chartink.com/screener/short-term-bullish
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         recent = data.head(1)
-        if(recent['SSMA'][0] > recent['SMA'][0] and recent['Close'][0] > recent['SSMA'][0]):
-            screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + 'Bullish' + colorText.END
-            saveDict['MA-Signal'] = 'Bullish'
-            return True
+        x = len(data["Close"])
+        fastk, fastd = talib.STOCHRSI(data["Close"].values, timeperiod=14, fastk_period=5, fastd_period=3, fastd_matype=0)
+        fk = np.round(fastk[x - 3:], 5)
+        ichi = ichimoku(data)
+        aboveCloudTop = False
+        # baseline > cloud top (cloud is bound by span a and span b) and close is > cloud top
+        if ichi['cloud_green'][0]:
+            aboveCloudTop = ichi['kijun_sen'][0] > ichi['senkou_span_a'][0] and recent['Close'][0] > ichi['senkou_span_a'][0]
+        elif ichi['cloud_red'][0]:
+            aboveCloudTop = ichi['kijun_sen'][0] > ichi['senkou_span_b'][0] and recent['Close'][0] > ichi['senkou_span_b'][0]
+
+        # Latest Ichimoku baseline is < latest Ichimoku conversion line
+        if aboveCloudTop and ichi['kijun_sen'][0] < ichi['tenkan_sen'][0]:
+            # StochRSI crossed 20 and RSI > 50
+            if fk > 20 and recent['RSI'][0] > 50:
+                # condition of crossing the StochRSI main signal line from bottom to top 
+                if fastd[100] < fastk[100] and fastd[101] > fastk[101]:
+                    # close > 50 period SMA/EMA and 200 period SMA/EMA
+                    if(recent['SSMA'][0] > recent['SMA'][0] and recent['Close'][0] > recent['SSMA'][0] and recent['Close'][0] > recent['LMA'][0]):
+                        screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + 'Bullish' + colorText.END
+                        saveDict['MA-Signal'] = 'Bullish'
+                        return True
         return False
 
     # Validate Moving averages and look for buy/sell signals
@@ -452,7 +478,7 @@ class tools:
             maRev = talib.EMA(data['Close'],timeperiod=maLength)
         else:
             maRev = talib.MA(data['Close'],timeperiod=maLength)
-        data.insert(12,'maRev',maRev)
+        data.insert(14,'maRev',maRev)
         data = data[::-1].head(3)
         if data.equals(data[(data.Close >= (data.maRev - (data.maRev*percentage))) & (data.Close <= (data.maRev + (data.maRev*percentage)))]) and data.head(1)['Close'][0] >= data.head(1)['maRev'][0]:
             screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + f'Reversal-{maLength}MA' + colorText.END
