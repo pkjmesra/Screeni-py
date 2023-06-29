@@ -175,23 +175,11 @@ def initExecution():
 def main(testing=False, testBuild=False, downloadOnly=False):
     global screenCounter, screenResultsCounter, stockDict, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly
     screenCounter = multiprocessing.Value('i', 1)
-    screenResultsCounter = multiprocessing.Value('i', 0)
-    
-    if multiprocessing.cpu_count() == 1:
-        if stockDict is None:
-            stockDict = {}
-            loadCount = 0
-            keyboardInterruptEvent = None
-    else:
-        try:
-            if stockDict is None:
-                stockDict = multiprocessing.Manager().dict()
-                loadCount = 0
-            keyboardInterruptEvent = multiprocessing.Manager().Event()
-        except:
-            stockDict = {}
-            pass
-
+    screenResultsCounter = multiprocessing.Value('i', 0)    
+    if stockDict is None:
+        stockDict = multiprocessing.Manager().dict()
+        loadCount = 0
+    keyboardInterruptEvent = multiprocessing.Manager().Event()
     minRSI = 0
     maxRSI = 100
     insideBarToLookback = 7
@@ -352,7 +340,7 @@ def main(testing=False, testBuild=False, downloadOnly=False):
 
         totalConsumers = multiprocessing.cpu_count()
         if totalConsumers == 1:
-            totalConsumers = 1      # This is required for single core machine
+            totalConsumers = 2      # This is required for single core machine
         if configManager.cacheEnabled is True and multiprocessing.cpu_count() > 2:
             totalConsumers -= 1
         consumers = [StockConsumer(tasks_queue, results_queue, screenCounter, screenResultsCounter, stockDict, proxyServer, keyboardInterruptEvent)
