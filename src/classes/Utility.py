@@ -26,18 +26,12 @@ from classes.Changelog import VERSION, changelog
 import classes.ConfigManager as ConfigManager
 
 art = colorText.GREEN + '''
-     .d8888b.                                             d8b                   
-    d88P  Y88b                                            Y8P                   
-    Y88b.                                                                       
-     "Y888b.    .d8888b 888d888 .d88b.   .d88b.  88888b.  888 88888b.  888  888 
-        "Y88b. d88P"    888P"  d8P  Y8b d8P  Y8b 888 "88b 888 888 "88b 888  888 
-          "888 888      888    88888888 88888888 888  888 888 888  888 888  888 
-    Y88b  d88P Y88b.    888    Y8b.     Y8b.     888  888 888 888 d88P Y88b 888 
-     "Y8888P"   "Y8888P 888     "Y8888   "Y8888  888  888 888 88888P"   "Y88888 
-                                                              888           888 
-                                                              888      Y8b d88P 
-                                                              888       "Y88P"  
-
+    $$$$$$   $$   $$   $$$$$                                                        
+    $$   $$  $$  $$   $$   $$                  $$$$    $$$$            $$$$         
+    $$   $$  $$$$$     $$$      $$$$$  $$ $$  $$  $$  $$  $$  $$$$$   $$  $$  $$ $$ 
+    $$$$$$   $$  $$      $$$   $$      $$$ $  $$$$$$  $$$$$$  $$  $$  $$$$$$  $$$ $ 
+    $$       $$   $$  $$   $$  $$      $$     $$      $$      $$  $$  $$      $$    
+    $$       $$   $$   $$$$$    $$$$$  $$      $$$$$   $$$$$  $$  $$   $$$$$  $$    
 ''' + colorText.END
 
 lastScreened = 'last_screened_results.pkl'

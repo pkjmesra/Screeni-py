@@ -25,7 +25,7 @@ if sys.platform.startswith('win'):
     import multiprocessing.popen_spawn_win32 as forking
 else:
     import multiprocessing.popen_fork as forking
-
+    multiprocessing.set_start_method('fork')
 
 class StockConsumer(multiprocessing.Process):
 
@@ -122,7 +122,7 @@ class StockConsumer(multiprocessing.Process):
                 isMaReversal = screener.validateMovingAverages(
                     processedData, screeningDictionary, saveDictionary, maRange=1.25)
                 isShortTermBullish = screener.validateShortTermBullish(
-                    processedData, screeningDictionary, saveDictionary)
+                    fullData, screeningDictionary, saveDictionary)
                 isVolumeHigh = screener.validateVolume(
                     processedData, screeningDictionary, saveDictionary, volumeRatio= volumeRatio)
                 isBreaking = screener.findBreakout(
@@ -263,8 +263,8 @@ class StockConsumer(multiprocessing.Process):
         except KeyError:
             pass
         except Exception as e:
-            # import traceback
-            # traceback.print_exc()
+            import traceback
+            traceback.print_exc()
             if printCounter:
                 print(colorText.FAIL +
                       ("\n[+] Exception Occured while Screening %s! Skipping this stock.." % stock) + colorText.END)
