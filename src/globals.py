@@ -313,7 +313,7 @@ def main(testing=False, testBuild=False, downloadOnly=False):
         print(colorText.BOLD + colorText.FAIL + '\n[+] Error: Option 12 to 39 Not implemented yet! Press any key to continue.' + colorText.END) 
         input('')
         main()
-    if tickerOption in 'WEMNZ' or (tickerOption >= 0 and tickerOption < 15):
+    if (not str(tickerOption).isnumeric() and tickerOption in 'WEMNZ') or (str(tickerOption).isnumeric() and (tickerOption >= 0 and tickerOption < 15)):
         configManager.getConfig(ConfigManager.parser)
         try:
             if tickerOption == 'W':
@@ -509,3 +509,6 @@ def getProxyServer():
     return proxyServer
 
 proxyServer = getProxyServer()
+
+# https://chartink.com/screener/15-min-price-volume-breakout
+# https://chartink.com/screener/15min-volume-breakout
