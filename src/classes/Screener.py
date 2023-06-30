@@ -637,30 +637,26 @@ class tools:
         # Reverse the dataframe for ichimoku calculations with date in ascending order
         df_new = data[::-1]
         try:
-            df_new = df_new.rename(columns={'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Volume': 'volume'})
-            ichi = pktalib.ichimoku(df_new,9,26,52,26)
-            print(ichi)
-            df_new['kijun_sen'] = ichi['kijun_sen']
-            df_new['tenkan_sen'] = ichi['tenkan_sen']
-            df_new['senkou_span_a'] = ichi['senkou_span_a']
-            df_new['senkou_span_b'] = ichi['senkou_span_b']
-            df_new['cloud_green'] = ichi['cloud_green']
-            df_new['cloud_red'] = ichi['cloud_red']
+            df_ichi = df_new.rename(columns={'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Volume': 'volume'})
+            ichi = pktalib.ichimoku(df_ichi,9,26,52,26)
+            df_new = pd.concat([df_new, ichi], axis=1)
             # Reverse again to get the most recent date on top
             df_new = df_new[::-1]
             df_new = df_new.head(1)
+            df_new['cloud_green'] = df_new['ISA_9'][0] > df_new['ISB_26'][0]
+            df_new['cloud_red'] = df_new['ISB_26'][0] > df_new['ISA_9'][0]
         except:
             import traceback
             traceback.print_exc()
         aboveCloudTop = False
         # baseline > cloud top (cloud is bound by span a and span b) and close is > cloud top
         if df_new['cloud_green'][0]:
-            aboveCloudTop = df_new['kijun_sen'][0] > df_new['senkou_span_a'][0] and recent['Close'][0] > df_new['senkou_span_a'][0]
+            aboveCloudTop = df_new['IKS_26'][0] > df_new['ISA_9'][0] and recent['Close'][0] > df_new['ISA_9'][0]
         elif df_new['cloud_red'][0]:
-            aboveCloudTop = df_new['kijun_sen'][0] > df_new['senkou_span_b'][0] and recent['Close'][0] > df_new['senkou_span_b'][0]
+            aboveCloudTop = df_new['IKS_26'][0] > df_new['ISB_26'][0] and recent['Close'][0] > df_new['ISB_26'][0]
 
         # Latest Ichimoku baseline is < latest Ichimoku conversion line
-        if aboveCloudTop and df_new['kijun_sen'][0] < df_new['tenkan_sen'][0]:
+        if aboveCloudTop and df_new['IKS_26'][0] < df_new['ITS_9'][0]:
             # StochRSI crossed 20 and RSI > 50
             if fk > 20 and recent['RSI'][0] > 50:
                 # condition of crossing the StochRSI main signal line from bottom to top 

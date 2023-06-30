@@ -44,7 +44,9 @@ class pktalib:
     
     @classmethod
     def ichimoku(self, df, tenkan=None, kijun=None, senkou=None, include_chikou=True, offset=None):
-        return talib.ichimoku(df['High'],df['Low'],df['Close'], tenkan, kijun, senkou, False, 26)
+        import pandas_ta as ta
+        ichimokudf, spandf = ta.ichimoku(df['high'],df['low'],df['close'], tenkan, kijun, senkou, False, 26)
+        return ichimokudf
 
     @classmethod
     def CDLMORNINGSTAR(self, open, high, low, close):
