@@ -21,10 +21,6 @@ from technical.indicators import ichimoku
 from classes.ColorText import colorText
 from classes.SuppressOutput import SuppressOutput
 
-# Exception for newly listed stocks with candle nos < daysToLookback
-class StockDataNotAdequate(Exception):
-    pass
-
 # Exception for only downloading stock data and not screening
 class DownloadDataOnly(Exception):
     pass
@@ -33,226 +29,15 @@ class DownloadDataOnly(Exception):
 class NotNewlyListed(Exception):
     pass
 
+# Exception for newly listed stocks with candle nos < daysToLookback
+class StockDataNotAdequate(Exception):
+    pass
+
 # This Class contains methods for stock analysis and screening validation
 class tools:
 
     def __init__(self, configManager) -> None:
         self.configManager = configManager
-
-    # Private method to find candle type
-    # True = Bullish, False = Bearish
-    def getCandleType(self, dailyData):
-        return bool(dailyData['Close'][0] >= dailyData['Open'][0])
-            
-
-    # Preprocess the acquired data
-    def preprocessData(self, data, daysToLookback=None):
-        if daysToLookback is None:
-            daysToLookback = self.configManager.daysToLookback
-        if self.configManager.useEMA:
-            sma = talib.EMA(data['Close'],timeperiod=50)
-            lma = talib.EMA(data['Close'],timeperiod=200)
-            ssma = talib.EMA(data['Close'],timeperiod=9)
-            data.insert(6,'SMA',sma)
-            data.insert(7,'LMA',lma)
-            data.insert(8,'SSMA',ssma)
-        else:
-            sma = data.rolling(window=50).mean()
-            lma = data.rolling(window=200).mean()
-            ssma = data.rolling(window=9).mean()
-            data.insert(6,'SMA',sma['Close'])
-            data.insert(7,'LMA',lma['Close'])
-            data.insert(8,'SSMA',ssma['Close'])
-        vol = data.rolling(window=20).mean()
-        rsi = talib.RSI(data['Close'], timeperiod=14)
-        data.insert(9,'VolMA',vol['Volume'])
-        data.insert(10,'RSI',rsi)
-        cci = talib.CCI(data['High'], data['Low'], data['Close'], timeperiod=14)
-        data.insert(11,'CCI',cci)
-        x = len(data["Close"])
-        fastk, fastd = talib.STOCHRSI(data["Close"].values, timeperiod=14, fastk_period=5, fastd_period=3, fastd_matype=0)
-        data.insert(12,'FASTK',fastk)
-        data.insert(13,'FASTD',fastd)
-        data = data[::-1]               # Reverse the dataframe
-        # data = data.fillna(0)
-        # data = data.replace([np.inf, -np.inf], 0)
-        fullData = data
-        trimmedData = data.head(daysToLookback)
-        return (fullData, trimmedData)
-
-    # Validate LTP within limits
-    def validateLTP(self, data, screenDict, saveDict, minLTP=None, maxLTP=None):
-        if minLTP is None:
-            minLTP = self.configManager.minLTP
-        if maxLTP is None:
-            maxLTP = self.configManager.maxLTP
-        data = data.fillna(0)
-        data = data.replace([np.inf, -np.inf], 0)
-        recent = data.head(1)
-
-        pct_change = (data[::-1]['Close'].pct_change() * 100).iloc[-1]
-        if pct_change > 0.2:
-            pct_change = colorText.GREEN + (" (%.1f%%)" % pct_change) + colorText.END
-        elif pct_change < -0.2:
-            pct_change = colorText.FAIL + (" (%.1f%%)" % pct_change) + colorText.END
-        else:
-            pct_change = colorText.WARN + (" (%.1f%%)" % pct_change) + colorText.END
-            
-        ltp = round(recent['Close'][0],2)
-        saveDict['LTP'] = str(ltp)
-        verifyStageTwo = True
-        if self.configManager.stageTwo and len(data) > 250:
-            yearlyLow = data.head(250).min()['Close']
-            yearlyHigh = data.head(250).max()['Close']
-            if ltp < (2 * yearlyLow) or ltp < (0.75 * yearlyHigh):
-                verifyStageTwo = False
-        if(ltp >= minLTP and ltp <= maxLTP and verifyStageTwo):
-            screenDict['LTP'] = colorText.GREEN + ("%.2f" % ltp) + pct_change + colorText.END
-            return True
-        screenDict['LTP'] = colorText.FAIL + ("%.2f" % ltp) + pct_change + colorText.END
-        return False
-
-    # Validate if share prices are consolidating
-    def validateConsolidation(self, data, screenDict, saveDict, percentage=10):
-        data = data.fillna(0)
-        data = data.replace([np.inf, -np.inf], 0)
-        hc = data.describe()['Close']['max']
-        lc = data.describe()['Close']['min']
-        if ((hc - lc) <= (hc*percentage/100) and (hc - lc != 0)):
-            screenDict['Consolidating'] = colorText.BOLD + colorText.GREEN + "Range = " + str(round((abs((hc-lc)/hc)*100),1))+"%" + colorText.END
-        else:
-            screenDict['Consolidating'] = colorText.BOLD + colorText.FAIL + "Range = " + str(round((abs((hc-lc)/hc)*100),1)) + "%" + colorText.END
-        saveDict['Consolidating'] = str(round((abs((hc-lc)/hc)*100),1))+"%"
-        return round((abs((hc-lc)/hc)*100),1)
-
-    # Validate if the stock is bullish in the short term
-    def validateShortTermBullish(self, data, screenDict, saveDict):
-        # https://chartink.com/screener/short-term-bullish
-        data = data.fillna(0)
-        data = data.replace([np.inf, -np.inf], 0)
-        recent = data.head(1)
-        fk = np.round(data['FASTK'][2], 5)
-        # Reverse the dataframe for ichimoku calculations with date in ascending order
-        df_new = data[::-1]
-        try:
-            df_new = df_new.rename(columns={'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Volume': 'volume'})
-            ichi = ichimoku(df_new,9,26,52,26)
-            df_new['kijun_sen'] = ichi['kijun_sen']
-            df_new['tenkan_sen'] = ichi['tenkan_sen']
-            df_new['senkou_span_a'] = ichi['senkou_span_a']
-            df_new['senkou_span_b'] = ichi['senkou_span_b']
-            df_new['cloud_green'] = ichi['cloud_green']
-            df_new['cloud_red'] = ichi['cloud_red']
-            # Reverse again to get the most recent date on top
-            df_new = df_new[::-1]
-            df_new = df_new.head(1)
-        except:
-            import traceback
-            traceback.print_exc()
-        aboveCloudTop = False
-        # baseline > cloud top (cloud is bound by span a and span b) and close is > cloud top
-        if df_new['cloud_green'][0]:
-            aboveCloudTop = df_new['kijun_sen'][0] > df_new['senkou_span_a'][0] and recent['Close'][0] > df_new['senkou_span_a'][0]
-        elif df_new['cloud_red'][0]:
-            aboveCloudTop = df_new['kijun_sen'][0] > df_new['senkou_span_b'][0] and recent['Close'][0] > df_new['senkou_span_b'][0]
-
-        # Latest Ichimoku baseline is < latest Ichimoku conversion line
-        if aboveCloudTop and df_new['kijun_sen'][0] < df_new['tenkan_sen'][0]:
-            # StochRSI crossed 20 and RSI > 50
-            if fk > 20 and recent['RSI'][0] > 50:
-                # condition of crossing the StochRSI main signal line from bottom to top 
-                if data['FASTD'][100] < data['FASTK'][100] and data['FASTD'][101] > data['FASTK'][101]:
-                    # close > 50 period SMA/EMA and 200 period SMA/EMA
-                    if(recent['SSMA'][0] > recent['SMA'][0] and recent['Close'][0] > recent['SSMA'][0] and recent['Close'][0] > recent['LMA'][0]):
-                        screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + 'Bullish' + colorText.END
-                        saveDict['MA-Signal'] = 'Bullish'
-                        return True
-        return False
-
-    # Validate Moving averages and look for buy/sell signals
-    def validateMovingAverages(self, data, screenDict, saveDict, maRange=2.5):
-        data = data.fillna(0)
-        data = data.replace([np.inf, -np.inf], 0)
-        recent = data.head(1)
-        if(recent['SMA'][0] > recent['LMA'][0] and recent['Close'][0] > recent['SMA'][0]):
-            screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + 'Bullish' + colorText.END
-            saveDict['MA-Signal'] = 'Bullish'
-        elif(recent['SMA'][0] < recent['LMA'][0]):
-            screenDict['MA-Signal'] = colorText.BOLD + colorText.FAIL + 'Bearish' + colorText.END
-            saveDict['MA-Signal'] = 'Bearish'
-        elif(recent['SMA'][0] == 0):
-            screenDict['MA-Signal'] = colorText.BOLD + colorText.WARN + 'Unknown' + colorText.END
-            saveDict['MA-Signal'] = 'Unknown'
-        else:
-            screenDict['MA-Signal'] = colorText.BOLD + colorText.WARN + 'Neutral' + colorText.END
-            saveDict['MA-Signal'] = 'Neutral'
-
-        smaDev = data['SMA'][0] * maRange / 100
-        lmaDev = data['LMA'][0] * maRange / 100
-        open, high, low, close, sma, lma = data['Open'][0], data['High'][0], data['Low'][0], data['Close'][0], data['SMA'][0], data['LMA'][0]
-        maReversal = 0
-        # Taking Support 50
-        if close > sma and low <= (sma + smaDev):
-            screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + '50MA-Support' + colorText.END
-            saveDict['MA-Signal'] = '50MA-Support'
-            maReversal = 1
-        # Validating Resistance 50
-        elif close < sma and high >= (sma - smaDev):
-            screenDict['MA-Signal'] = colorText.BOLD + colorText.FAIL + '50MA-Resist' + colorText.END
-            saveDict['MA-Signal'] = '50MA-Resist'
-            maReversal = -1
-        # Taking Support 200
-        elif close > lma and low <= (lma + lmaDev):
-            screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + '200MA-Support' + colorText.END
-            saveDict['MA-Signal'] = '200MA-Support'
-            maReversal = 1
-        # Validating Resistance 200
-        elif close < lma and high >= (lma - lmaDev):
-            screenDict['MA-Signal'] = colorText.BOLD + colorText.FAIL + '200MA-Resist' + colorText.END
-            saveDict['MA-Signal'] = '200MA-Resist'
-            maReversal = -1
-        # For a Bullish Candle
-        if self.getCandleType(data):
-            # Crossing up 50
-            if open < sma and close > sma:
-                screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + 'BullCross-50MA' + colorText.END
-                saveDict['MA-Signal'] = 'BullCross-50MA'
-                maReversal = 1            
-            # Crossing up 200
-            elif open < lma and close > lma:
-                screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + 'BullCross-200MA' + colorText.END
-                saveDict['MA-Signal'] = 'BullCross-200MA'
-                maReversal = 1
-        # For a Bearish Candle
-        elif not self.getCandleType(data):
-            # Crossing down 50
-            if open > sma and close < sma:
-                screenDict['MA-Signal'] = colorText.BOLD + colorText.FAIL + 'BearCross-50MA' + colorText.END
-                saveDict['MA-Signal'] = 'BearCross-50MA'
-                maReversal = -1         
-            # Crossing up 200
-            elif open > lma and close < lma:
-                screenDict['MA-Signal'] = colorText.BOLD + colorText.FAIL + 'BearCross-200MA' + colorText.END
-                saveDict['MA-Signal'] = 'BearCross-200MA'
-                maReversal = -1
-        return maReversal
-
-    # Validate if volume of last day is higher than avg
-    def validateVolume(self, data, screenDict, saveDict, volumeRatio=2.5):
-        data = data.fillna(0)
-        data = data.replace([np.inf, -np.inf], 0)
-        recent = data.head(1)
-        if recent['VolMA'][0] == 0: # Handles Divide by 0 warning
-            saveDict['Volume'] = "Unknown"
-            screenDict['Volume'] = colorText.BOLD + colorText.WARN + "Unknown" + colorText.END
-            return True
-        ratio = round(recent['Volume'][0]/recent['VolMA'][0],2)
-        saveDict['Volume'] = str(ratio)+"x"
-        if(ratio >= volumeRatio and ratio != np.nan and (not math.isinf(ratio)) and (ratio != 20)):
-            screenDict['Volume'] = colorText.BOLD + colorText.GREEN + str(ratio) + "x" + colorText.END
-            return True
-        screenDict['Volume'] = colorText.BOLD + colorText.FAIL + str(ratio) + "x" + colorText.END
-        return False
 
     # Find accurate breakout value
     def findBreakout(self, data, screenDict, saveDict, daysToLookback):
@@ -297,73 +82,23 @@ class tools:
             screenDict['Breaking-Out'] = colorText.BOLD + colorText.FAIL + "BO: " + str(hc) + colorText.END
             return False
 
-    # Validate 'Inside Bar' structure for recent days
-    def validateInsideBar(self, data, screenDict, saveDict, chartPattern=1, daysToLookback=5):
-        orgData = data
-        for i in range(daysToLookback, round(daysToLookback*0.5)-1, -1):
-            if i == 2:
-                return 0        # Exit if only last 2 candles are left
-            if chartPattern == 1:
-                if "Up" in saveDict['Trend'] and ("Bull" in saveDict['MA-Signal'] or "Support" in saveDict['MA-Signal']):
-                    data = orgData.head(i)
-                    refCandle = data.tail(1)
-                    if (len(data.High[data.High > refCandle.High.item()]) == 0) and (len(data.Low[data.Low < refCandle.Low.item()]) == 0) and (len(data.Open[data.Open > refCandle.High.item()]) == 0) and (len(data.Close[data.Close < refCandle.Low.item()]) == 0):
-                        screenDict['Pattern'] = colorText.BOLD + colorText.WARN + ("Inside Bar (%d)" % i) + colorText.END
-                        saveDict['Pattern'] = "Inside Bar (%d)" % i
-                        return i
-                else:
-                    return 0
-            else:
-                if "Down" in saveDict['Trend'] and ("Bear" in saveDict['MA-Signal'] or "Resist" in saveDict['MA-Signal']):
-                    data = orgData.head(i)
-                    refCandle = data.tail(1)
-                    if (len(data.High[data.High > refCandle.High.item()]) == 0) and (len(data.Low[data.Low < refCandle.Low.item()]) == 0) and (len(data.Open[data.Open > refCandle.High.item()]) == 0) and (len(data.Close[data.Close < refCandle.Low.item()]) == 0):
-                        screenDict['Pattern'] = colorText.BOLD + colorText.WARN + ("Inside Bar (%d)" % i) + colorText.END
-                        saveDict['Pattern'] = "Inside Bar (%d)" % i
-                        return i
-                else:
-                    return 0
-        return 0
-    
-    # Validate if recent volume is lowest of last 'N' Days
-    def validateLowestVolume(self, data, daysForLowestVolume):
-        data = data.fillna(0)
-        data = data.replace([np.inf, -np.inf], 0)
-        if daysForLowestVolume is None:
-            daysForLowestVolume = 30
-        data = data.head(daysForLowestVolume)
-        recent = data.head(1)
-        if((recent['Volume'][0] <= data.describe()['Volume']['min']) and recent['Volume'][0] != np.nan):
+    # Find stock reversing at given MA
+    def findReversalMA(self, data, screenDict, saveDict, maLength, percentage=0.015):
+        if maLength is None:
+            maLength = 20
+        data = data[::-1]
+        if self.configManager.useEMA:
+            maRev = talib.EMA(data['Close'],timeperiod=maLength)
+        else:
+            maRev = talib.MA(data['Close'],timeperiod=maLength)
+        data.insert(14,'maRev',maRev)
+        data = data[::-1].head(3)
+        if data.equals(data[(data.Close >= (data.maRev - (data.maRev*percentage))) & (data.Close <= (data.maRev + (data.maRev*percentage)))]) and data.head(1)['Close'][0] >= data.head(1)['maRev'][0]:
+            screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + f'Reversal-{maLength}MA' + colorText.END
+            saveDict['MA-Signal'] = f'Reversal-{maLength}MA'
             return True
         return False
 
-    # validate if RSI is within given range
-    def validateRSI(self, data, screenDict, saveDict, minRSI, maxRSI):
-        data = data.fillna(0)
-        data = data.replace([np.inf, -np.inf], 0)
-        rsi = int(data.head(1)['RSI'][0])
-        saveDict['RSI'] = rsi
-        if(rsi >= minRSI and rsi <= maxRSI) and (rsi <= 70 and rsi >= 30):
-            screenDict['RSI'] = colorText.BOLD + colorText.GREEN + str(rsi) + colorText.END
-            return True
-        screenDict['RSI'] = colorText.BOLD + colorText.FAIL + str(rsi) + colorText.END
-        return False
-
-    # validate if CCI is within given range
-    def validateCCI(self, data, screenDict, saveDict, minCCI, maxCCI):
-        data = data.fillna(0)
-        data = data.replace([np.inf, -np.inf], 0)
-        cci = int(data.head(1)['CCI'][0])
-        saveDict['CCI'] = cci
-        if((cci <= minCCI or cci >= maxCCI) and ("Up" in saveDict['Trend'])):
-            if(cci <= minCCI):
-                screenDict['CCI'] = colorText.BOLD + colorText.GREEN + str(cci) + colorText.END
-            else:
-                screenDict['CCI'] = colorText.BOLD + colorText.FAIL + str(cci) + colorText.END
-            return True
-        screenDict['CCI'] = colorText.BOLD + colorText.FAIL + str(cci) + colorText.END
-        return False
-    
     # Find out trend for days to lookback
     def findTrend(self, data, screenDict, saveDict, daysToLookback=None,stockName=""):
         if daysToLookback is None:
@@ -407,135 +142,6 @@ class tools:
             screenDict['Trend'] = colorText.BOLD + colorText.WARN + "Unknown" + colorText.END
             saveDict['Trend'] = 'Unknown'
         return saveDict['Trend']
-
-    # Find if stock is validating volume spread analysis
-    def validateVolumeSpreadAnalysis(self, data, screenDict, saveDict):
-        try:
-            data = data.head(2)
-            try:
-                # Check for previous RED candles
-                # Current candle = 0th, Previous Candle = 1st for following logic
-                if data.iloc[1]['Open'] >= data.iloc[1]['Close']:
-                    spread1 = abs(data.iloc[1]['Open'] - data.iloc[1]['Close'])
-                    spread0 = abs(data.iloc[0]['Open'] - data.iloc[0]['Close'])
-                    lower_wick_spread0 = max(data.iloc[0]['Open'], data.iloc[0]['Close']) - data.iloc[0]['Low']
-                    vol1 = data.iloc[1]['Volume']
-                    vol0 = data.iloc[0]['Volume']
-                    if spread0 > spread1 and vol0 < vol1 and data.iloc[0]['Volume'] < data.iloc[0]['VolMA'] and data.iloc[0]['Close'] <= data.iloc[1]['Open'] and spread0 < lower_wick_spread0 and data.iloc[0]['Volume'] <= int(data.iloc[1]['Volume']*0.75):
-                        screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + 'Supply Drought' + colorText.END
-                        saveDict['Pattern'] = 'Supply Drought'
-                        return True
-                    if spread0 < spread1 and vol0 > vol1 and data.iloc[0]['Volume'] > data.iloc[0]['VolMA'] and data.iloc[0]['Close'] <= data.iloc[1]['Open']:
-                        screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + 'Demand Rise' + colorText.END
-                        saveDict['Pattern'] = 'Demand Rise'
-                        return True
-            except IndexError:
-                pass
-            return False
-        except:
-            import traceback
-            traceback.print_exc()
-            return False
-
-    # Find if stock gaining bullish momentum
-    def validateMomentum(self, data, screenDict, saveDict):
-        try:
-            data = data.head(3)
-            for row in data.iterrows():
-                # All 3 candles should be Green and NOT Circuits
-                if row[1]['Close'].item() <= row[1]['Open'].item():
-                    return False
-            openDesc = data.sort_values(by=['Open'], ascending=False)
-            closeDesc = data.sort_values(by=['Close'], ascending=False)
-            volDesc = data.sort_values(by=['Volume'], ascending=False)
-            try:
-                if data.equals(openDesc) and data.equals(closeDesc) and data.equals(volDesc):
-                    if (data['Open'][0].item() >= data['Close'][1].item()) and (data['Open'][1].item() >= data['Close'][2].item()):
-                        screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + 'Momentum Gainer' + colorText.END
-                        saveDict['Pattern'] = 'Momentum Gainer'
-                        return True
-            except IndexError:
-                pass
-            return False
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return False
-
-    # Validate if the stock prices are at least rising by 2% for the last 3 sessions
-    def validatePriceRisingByAtLeast2Percent(self, data, screenDict):
-        data = data.fillna(0)
-        data = data.replace([np.inf, -np.inf], 0)
-        data = data.head(4)
-        day0 = data.iloc[0]['Close'].item()
-        dayMinus1 = data.iloc[1]['Close'].item()
-        dayMinus2 = data.iloc[2]['Close'].item()
-        dayMinus3 = data.iloc[3]['Close'].item()
-        percent3 = round((dayMinus2 - dayMinus3)*100/dayMinus3,2)
-        percent2 = round((dayMinus1 - dayMinus2)*100/dayMinus2,2)
-        percent1 = round((day0 - dayMinus1)*100/dayMinus1,2)
-        
-        if percent1 >= 2 and percent2 >= 2 and percent3 >= 2:
-            pct_change = colorText.GREEN + (" (%.1f%%," % percent1) + (" %.1f%%," % percent2) + (" %.1f%%)" % percent3) + colorText.END
-            screenDict['LTP'] = colorText.GREEN + ("%.2f" % round(day0,2)) + pct_change + colorText.END
-            return True and self.getCandleType(data.head(1))
-        return False
-        
-    # Find stock reversing at given MA
-    def findReversalMA(self, data, screenDict, saveDict, maLength, percentage=0.015):
-        if maLength is None:
-            maLength = 20
-        data = data[::-1]
-        if self.configManager.useEMA:
-            maRev = talib.EMA(data['Close'],timeperiod=maLength)
-        else:
-            maRev = talib.MA(data['Close'],timeperiod=maLength)
-        data.insert(14,'maRev',maRev)
-        data = data[::-1].head(3)
-        if data.equals(data[(data.Close >= (data.maRev - (data.maRev*percentage))) & (data.Close <= (data.maRev + (data.maRev*percentage)))]) and data.head(1)['Close'][0] >= data.head(1)['maRev'][0]:
-            screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + f'Reversal-{maLength}MA' + colorText.END
-            saveDict['MA-Signal'] = f'Reversal-{maLength}MA'
-            return True
-        return False
-
-    # Find IPO base
-    def validateIpoBase(self, stock, data, screenDict, saveDict, percentage=0.3):
-        listingPrice = data[::-1].head(1)['Open'][0]
-        currentPrice = data.head(1)['Close'][0]
-        ATH = data.describe()['High']['max']
-        if ATH > (listingPrice + (listingPrice * percentage)):
-            return False
-        away = round(((currentPrice - listingPrice)/listingPrice)*100, 1)
-        if((listingPrice - (listingPrice * percentage)) <= currentPrice <= (listingPrice + (listingPrice * percentage))):
-            if away > 0:
-                screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + f'IPO Base ({away} %)' + colorText.END
-            else:
-                screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + 'IPO Base ' + colorText.FAIL + f'({away} %)' + colorText.END
-            saveDict['Pattern'] = f'IPO Base ({away} %)'
-            return True
-        return False
-
-    # Find Conflucence
-    def validateConfluence(self, stock, data, screenDict, saveDict, percentage=0.1):
-        recent = data.head(1)
-        if(abs(recent['SMA'][0] - recent['LMA'][0]) <= (recent['SMA'][0] * percentage)):
-            difference = round(abs(recent['SMA'][0] - recent['LMA'][0])/recent['Close'][0] * 100,2)
-            if recent['SMA'][0] >= recent['LMA'][0]:
-                screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + f'Confluence ({difference}%)' + colorText.END
-                saveDict['MA-Signal'] = f'Confluence ({difference}%)'
-            else:
-                screenDict['MA-Signal'] = colorText.BOLD + colorText.FAIL + f'Confluence ({difference}%)' + colorText.END
-                saveDict['MA-Signal'] = f'Confluence ({difference}%)'
-            return True
-        return False
-
-    # Find if stock is newly listed
-    def validateNewlyListed(self, data, daysToLookback):
-        daysToLookback = int(daysToLookback[:-1])
-        recent = data.head(1)
-        if len(data) < daysToLookback and (recent['Close'][0] != np.nan and recent['Close'][0] > 0):
-            return True
-        return False
 
     # Find stocks approching to long term trendlines
     def findTrendlines(self, data, screenDict, saveDict, percentage = 0.05):
@@ -592,72 +198,11 @@ class tools:
         '''
         return False
 
-
-    # Find NRx range for Reversal
-    def validateNarrowRange(self, data, screenDict, saveDict, nr=4):
-        if Utility.tools.isTradingTime():
-            rangeData = data.head(nr+1)[1:]
-            now_candle = data.head(1)
-            rangeData['Range'] = abs(rangeData['Close'] - rangeData['Open'])
-            recent = rangeData.head(1)
-            if recent['Range'][0] == rangeData.describe()['Range']['min']:
-                if self.getCandleType(recent) and now_candle['Close'][0] >= recent['Close'][0]:
-                    screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + f'Buy-NR{nr}' + colorText.END
-                    saveDict['Pattern'] = f'Buy-NR{nr}'
-                    return True
-                elif not self.getCandleType(recent) and now_candle['Close'][0] <= recent['Close'][0]:
-                    screenDict['Pattern'] = colorText.BOLD + colorText.FAIL + f'Sell-NR{nr}' + colorText.END
-                    saveDict['Pattern'] = f'Sell-NR{nr}'
-                    return True
-            return False
-        else:
-            rangeData = data.head(nr)
-            rangeData['Range'] = abs(rangeData['Close'] - rangeData['Open'])
-            recent = rangeData.head(1)
-            if recent['Range'][0] == rangeData.describe()['Range']['min']:
-                screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + f'NR{nr}' + colorText.END
-                saveDict['Pattern'] = f'NR{nr}'
-                return True
-            return False
-
-    # Validate VPC
-    def validateVCP(self, data, screenDict, saveDict, stockName=None, window=3, percentageFromTop=3):
-        try:
-            percentageFromTop /= 100
-            data.reset_index(inplace=True)
-            data.rename(columns={'index':'Date'}, inplace=True)
-            data['tops'] = data['High'].iloc[list(argrelextrema(np.array(data['High']), np.greater_equal, order=window)[0])].head(4)
-            data['bots'] = data['Low'].iloc[list(argrelextrema(np.array(data['Low']), np.less_equal, order=window)[0])].head(4)
-            data = data.fillna(0)
-            data = data.replace([np.inf, -np.inf], 0)
-            tops = data[data.tops > 0]
-            bots = data[data.bots > 0]
-            highestTop = round(tops.describe()['High']['max'],1)
-            filteredTops = tops[tops.tops > (highestTop-(highestTop*percentageFromTop))]
-            # print(tops)
-            # print(filteredTops)
-            # print(tops.sort_values(by=['tops'], ascending=False))
-            # print(tops.describe())
-            # print(f"Till {highestTop-(highestTop*percentageFromTop)}")
-            if(filteredTops.equals(tops)):      # Tops are in the range
-                lowPoints = []
-                for i in range(len(tops)-1):
-                    endDate = tops.iloc[i]['Date']
-                    startDate = tops.iloc[i+1]['Date']
-                    lowPoints.append(data[(data.Date >= startDate) & (data.Date <= endDate)].describe()['Low']['min'])
-                lowPointsOrg = lowPoints
-                lowPoints.sort(reverse=True)
-                lowPointsSorted = lowPoints
-                ltp = data.head(1)['Close'][0]
-                if lowPointsOrg == lowPointsSorted and  ltp < highestTop and ltp > lowPoints[0]:
-                    screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + f'VCP (BO: {highestTop})' + colorText.END
-                    saveDict['Pattern'] = f'VCP (BO: {highestTop})'
-                    return True
-        except Exception as e:
-            import traceback
-            print(traceback.format_exc())
-        return False
-
+    # Private method to find candle type
+    # True = Bullish, False = Bearish
+    def getCandleType(self, dailyData):
+        return bool(dailyData['Close'][0] >= dailyData['Open'][0])
+            
     def getNiftyPrediction(self, data, proxyServer):
         import warnings 
         warnings.filterwarnings("ignore")
@@ -756,7 +301,460 @@ class tools:
         result_df.drop_duplicates(keep='last', inplace=True)
         result_df.sort_values(by='Time', inplace=True)
         return result_df[::-1]
+
+    # Preprocess the acquired data
+    def preprocessData(self, data, daysToLookback=None):
+        if daysToLookback is None:
+            daysToLookback = self.configManager.daysToLookback
+        if self.configManager.useEMA:
+            sma = talib.EMA(data['Close'],timeperiod=50)
+            lma = talib.EMA(data['Close'],timeperiod=200)
+            ssma = talib.EMA(data['Close'],timeperiod=9)
+            data.insert(6,'SMA',sma)
+            data.insert(7,'LMA',lma)
+            data.insert(8,'SSMA',ssma)
+        else:
+            sma = data.rolling(window=50).mean()
+            lma = data.rolling(window=200).mean()
+            ssma = data.rolling(window=9).mean()
+            data.insert(6,'SMA',sma['Close'])
+            data.insert(7,'LMA',lma['Close'])
+            data.insert(8,'SSMA',ssma['Close'])
+        vol = data.rolling(window=20).mean()
+        rsi = talib.RSI(data.fillna(0)['Close'], timeperiod=14)
+        data.insert(9,'VolMA',vol['Volume'])
+        data.insert(10,'RSI',rsi)
+        cci = talib.CCI(data['High'], data['Low'], data['Close'], timeperiod=14)
+        data.insert(11,'CCI',cci)
+        x = len(data["Close"])
+        fastk, fastd = talib.STOCHRSI(data["Close"].values, timeperiod=14, fastk_period=5, fastd_period=3, fastd_matype=0)
+        data.insert(12,'FASTK',fastk)
+        data.insert(13,'FASTD',fastd)
+        data = data[::-1]               # Reverse the dataframe
+        # data = data.fillna(0)
+        # data = data.replace([np.inf, -np.inf], 0)
+        fullData = data
+        trimmedData = data.head(daysToLookback)
+        return (fullData, trimmedData)
+
+    # validate if CCI is within given range
+    def validateCCI(self, data, screenDict, saveDict, minCCI, maxCCI):
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        cci = int(data.head(1)['CCI'][0])
+        saveDict['CCI'] = cci
+        if((cci <= minCCI or cci >= maxCCI) and ("Up" in saveDict['Trend'])):
+            if(cci <= minCCI):
+                screenDict['CCI'] = colorText.BOLD + colorText.GREEN + str(cci) + colorText.END
+            else:
+                screenDict['CCI'] = colorText.BOLD + colorText.FAIL + str(cci) + colorText.END
+            return True
+        screenDict['CCI'] = colorText.BOLD + colorText.FAIL + str(cci) + colorText.END
+        return False
+
+    # Find Conflucence
+    def validateConfluence(self, stock, data, screenDict, saveDict, percentage=0.1):
+        recent = data.head(1)
+        if(abs(recent['SMA'][0] - recent['LMA'][0]) <= (recent['SMA'][0] * percentage)):
+            difference = round(abs(recent['SMA'][0] - recent['LMA'][0])/recent['Close'][0] * 100,2)
+            if recent['SMA'][0] >= recent['LMA'][0]:
+                screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + f'Confluence ({difference}%)' + colorText.END
+                saveDict['MA-Signal'] = f'Confluence ({difference}%)'
+            else:
+                screenDict['MA-Signal'] = colorText.BOLD + colorText.FAIL + f'Confluence ({difference}%)' + colorText.END
+                saveDict['MA-Signal'] = f'Confluence ({difference}%)'
+            return True
+        return False
+
+    # Validate if share prices are consolidating
+    def validateConsolidation(self, data, screenDict, saveDict, percentage=10):
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        hc = data.describe()['Close']['max']
+        lc = data.describe()['Close']['min']
+        if ((hc - lc) <= (hc*percentage/100) and (hc - lc != 0)):
+            screenDict['Consolidating'] = colorText.BOLD + colorText.GREEN + "Range = " + str(round((abs((hc-lc)/hc)*100),1))+"%" + colorText.END
+        else:
+            screenDict['Consolidating'] = colorText.BOLD + colorText.FAIL + "Range = " + str(round((abs((hc-lc)/hc)*100),1)) + "%" + colorText.END
+        saveDict['Consolidating'] = str(round((abs((hc-lc)/hc)*100),1))+"%"
+        return round((abs((hc-lc)/hc)*100),1)
+
+    # Validate 'Inside Bar' structure for recent days
+    def validateInsideBar(self, data, screenDict, saveDict, chartPattern=1, daysToLookback=5):
+        orgData = data
+        for i in range(daysToLookback, round(daysToLookback*0.5)-1, -1):
+            if i == 2:
+                return 0        # Exit if only last 2 candles are left
+            if chartPattern == 1:
+                if "Up" in saveDict['Trend'] and ("Bull" in saveDict['MA-Signal'] or "Support" in saveDict['MA-Signal']):
+                    data = orgData.head(i)
+                    refCandle = data.tail(1)
+                    if (len(data.High[data.High > refCandle.High.item()]) == 0) and (len(data.Low[data.Low < refCandle.Low.item()]) == 0) and (len(data.Open[data.Open > refCandle.High.item()]) == 0) and (len(data.Close[data.Close < refCandle.Low.item()]) == 0):
+                        screenDict['Pattern'] = colorText.BOLD + colorText.WARN + ("Inside Bar (%d)" % i) + colorText.END
+                        saveDict['Pattern'] = "Inside Bar (%d)" % i
+                        return i
+                else:
+                    return 0
+            else:
+                if "Down" in saveDict['Trend'] and ("Bear" in saveDict['MA-Signal'] or "Resist" in saveDict['MA-Signal']):
+                    data = orgData.head(i)
+                    refCandle = data.tail(1)
+                    if (len(data.High[data.High > refCandle.High.item()]) == 0) and (len(data.Low[data.Low < refCandle.Low.item()]) == 0) and (len(data.Open[data.Open > refCandle.High.item()]) == 0) and (len(data.Close[data.Close < refCandle.Low.item()]) == 0):
+                        screenDict['Pattern'] = colorText.BOLD + colorText.WARN + ("Inside Bar (%d)" % i) + colorText.END
+                        saveDict['Pattern'] = "Inside Bar (%d)" % i
+                        return i
+                else:
+                    return 0
+        return 0
+
+    # Find IPO base
+    def validateIpoBase(self, stock, data, screenDict, saveDict, percentage=0.3):
+        listingPrice = data[::-1].head(1)['Open'][0]
+        currentPrice = data.head(1)['Close'][0]
+        ATH = data.describe()['High']['max']
+        if ATH > (listingPrice + (listingPrice * percentage)):
+            return False
+        away = round(((currentPrice - listingPrice)/listingPrice)*100, 1)
+        if((listingPrice - (listingPrice * percentage)) <= currentPrice <= (listingPrice + (listingPrice * percentage))):
+            if away > 0:
+                screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + f'IPO Base ({away} %)' + colorText.END
+            else:
+                screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + 'IPO Base ' + colorText.FAIL + f'({away} %)' + colorText.END
+            saveDict['Pattern'] = f'IPO Base ({away} %)'
+            return True
+        return False
+
+    # Validate if recent volume is lowest of last 'N' Days
+    def validateLowestVolume(self, data, daysForLowestVolume):
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        if daysForLowestVolume is None:
+            daysForLowestVolume = 30
+        data = data.head(daysForLowestVolume)
+        recent = data.head(1)
+        if((recent['Volume'][0] <= data.describe()['Volume']['min']) and recent['Volume'][0] != np.nan):
+            return True
+        return False
+
+    # Validate LTP within limits
+    def validateLTP(self, data, screenDict, saveDict, minLTP=None, maxLTP=None):
+        if minLTP is None:
+            minLTP = self.configManager.minLTP
+        if maxLTP is None:
+            maxLTP = self.configManager.maxLTP
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        recent = data.head(1)
+
+        pct_change = (data[::-1]['Close'].pct_change() * 100).iloc[-1]
+        if pct_change > 0.2:
+            pct_change = colorText.GREEN + (" (%.1f%%)" % pct_change) + colorText.END
+        elif pct_change < -0.2:
+            pct_change = colorText.FAIL + (" (%.1f%%)" % pct_change) + colorText.END
+        else:
+            pct_change = colorText.WARN + (" (%.1f%%)" % pct_change) + colorText.END
             
+        ltp = round(recent['Close'][0],2)
+        saveDict['LTP'] = str(ltp)
+        verifyStageTwo = True
+        if self.configManager.stageTwo and len(data) > 250:
+            yearlyLow = data.head(250).min()['Close']
+            yearlyHigh = data.head(250).max()['Close']
+            if ltp < (2 * yearlyLow) or ltp < (0.75 * yearlyHigh):
+                verifyStageTwo = False
+        if(ltp >= minLTP and ltp <= maxLTP and verifyStageTwo):
+            screenDict['LTP'] = colorText.GREEN + ("%.2f" % ltp) + pct_change + colorText.END
+            return True
+        screenDict['LTP'] = colorText.FAIL + ("%.2f" % ltp) + pct_change + colorText.END
+        return False
+
+    # Find if stock gaining bullish momentum
+    def validateMomentum(self, data, screenDict, saveDict):
+        try:
+            data = data.head(3)
+            for row in data.iterrows():
+                # All 3 candles should be Green and NOT Circuits
+                if row[1]['Close'].item() <= row[1]['Open'].item():
+                    return False
+            openDesc = data.sort_values(by=['Open'], ascending=False)
+            closeDesc = data.sort_values(by=['Close'], ascending=False)
+            volDesc = data.sort_values(by=['Volume'], ascending=False)
+            try:
+                if data.equals(openDesc) and data.equals(closeDesc) and data.equals(volDesc):
+                    if (data['Open'][0].item() >= data['Close'][1].item()) and (data['Open'][1].item() >= data['Close'][2].item()):
+                        screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + 'Momentum Gainer' + colorText.END
+                        saveDict['Pattern'] = 'Momentum Gainer'
+                        return True
+            except IndexError:
+                pass
+            return False
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return False
+
+    # Validate Moving averages and look for buy/sell signals
+    def validateMovingAverages(self, data, screenDict, saveDict, maRange=2.5):
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        recent = data.head(1)
+        if(recent['SMA'][0] > recent['LMA'][0] and recent['Close'][0] > recent['SMA'][0]):
+            screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + 'Bullish' + colorText.END
+            saveDict['MA-Signal'] = 'Bullish'
+        elif(recent['SMA'][0] < recent['LMA'][0]):
+            screenDict['MA-Signal'] = colorText.BOLD + colorText.FAIL + 'Bearish' + colorText.END
+            saveDict['MA-Signal'] = 'Bearish'
+        elif(recent['SMA'][0] == 0):
+            screenDict['MA-Signal'] = colorText.BOLD + colorText.WARN + 'Unknown' + colorText.END
+            saveDict['MA-Signal'] = 'Unknown'
+        else:
+            screenDict['MA-Signal'] = colorText.BOLD + colorText.WARN + 'Neutral' + colorText.END
+            saveDict['MA-Signal'] = 'Neutral'
+
+        smaDev = data['SMA'][0] * maRange / 100
+        lmaDev = data['LMA'][0] * maRange / 100
+        open, high, low, close, sma, lma = data['Open'][0], data['High'][0], data['Low'][0], data['Close'][0], data['SMA'][0], data['LMA'][0]
+        maReversal = 0
+        # Taking Support 50
+        if close > sma and low <= (sma + smaDev):
+            screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + '50MA-Support' + colorText.END
+            saveDict['MA-Signal'] = '50MA-Support'
+            maReversal = 1
+        # Validating Resistance 50
+        elif close < sma and high >= (sma - smaDev):
+            screenDict['MA-Signal'] = colorText.BOLD + colorText.FAIL + '50MA-Resist' + colorText.END
+            saveDict['MA-Signal'] = '50MA-Resist'
+            maReversal = -1
+        # Taking Support 200
+        elif close > lma and low <= (lma + lmaDev):
+            screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + '200MA-Support' + colorText.END
+            saveDict['MA-Signal'] = '200MA-Support'
+            maReversal = 1
+        # Validating Resistance 200
+        elif close < lma and high >= (lma - lmaDev):
+            screenDict['MA-Signal'] = colorText.BOLD + colorText.FAIL + '200MA-Resist' + colorText.END
+            saveDict['MA-Signal'] = '200MA-Resist'
+            maReversal = -1
+        # For a Bullish Candle
+        if self.getCandleType(data):
+            # Crossing up 50
+            if open < sma and close > sma:
+                screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + 'BullCross-50MA' + colorText.END
+                saveDict['MA-Signal'] = 'BullCross-50MA'
+                maReversal = 1            
+            # Crossing up 200
+            elif open < lma and close > lma:
+                screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + 'BullCross-200MA' + colorText.END
+                saveDict['MA-Signal'] = 'BullCross-200MA'
+                maReversal = 1
+        # For a Bearish Candle
+        elif not self.getCandleType(data):
+            # Crossing down 50
+            if open > sma and close < sma:
+                screenDict['MA-Signal'] = colorText.BOLD + colorText.FAIL + 'BearCross-50MA' + colorText.END
+                saveDict['MA-Signal'] = 'BearCross-50MA'
+                maReversal = -1         
+            # Crossing up 200
+            elif open > lma and close < lma:
+                screenDict['MA-Signal'] = colorText.BOLD + colorText.FAIL + 'BearCross-200MA' + colorText.END
+                saveDict['MA-Signal'] = 'BearCross-200MA'
+                maReversal = -1
+        return maReversal
+
+    # Find NRx range for Reversal
+    def validateNarrowRange(self, data, screenDict, saveDict, nr=4):
+        if Utility.tools.isTradingTime():
+            rangeData = data.head(nr+1)[1:]
+            now_candle = data.head(1)
+            rangeData['Range'] = abs(rangeData['Close'] - rangeData['Open'])
+            recent = rangeData.head(1)
+            if recent['Range'][0] == rangeData.describe()['Range']['min']:
+                if self.getCandleType(recent) and now_candle['Close'][0] >= recent['Close'][0]:
+                    screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + f'Buy-NR{nr}' + colorText.END
+                    saveDict['Pattern'] = f'Buy-NR{nr}'
+                    return True
+                elif not self.getCandleType(recent) and now_candle['Close'][0] <= recent['Close'][0]:
+                    screenDict['Pattern'] = colorText.BOLD + colorText.FAIL + f'Sell-NR{nr}' + colorText.END
+                    saveDict['Pattern'] = f'Sell-NR{nr}'
+                    return True
+            return False
+        else:
+            rangeData = data.head(nr)
+            rangeData['Range'] = abs(rangeData['Close'] - rangeData['Open'])
+            recent = rangeData.head(1)
+            if recent['Range'][0] == rangeData.describe()['Range']['min']:
+                screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + f'NR{nr}' + colorText.END
+                saveDict['Pattern'] = f'NR{nr}'
+                return True
+            return False
+
+    # Find if stock is newly listed
+    def validateNewlyListed(self, data, daysToLookback):
+        daysToLookback = int(daysToLookback[:-1])
+        recent = data.head(1)
+        if len(data) < daysToLookback and (recent['Close'][0] != np.nan and recent['Close'][0] > 0):
+            return True
+        return False
+
+    # Validate if the stock prices are at least rising by 2% for the last 3 sessions
+    def validatePriceRisingByAtLeast2Percent(self, data, screenDict):
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        data = data.head(4)
+        day0 = data.iloc[0]['Close'].item()
+        dayMinus1 = data.iloc[1]['Close'].item()
+        dayMinus2 = data.iloc[2]['Close'].item()
+        dayMinus3 = data.iloc[3]['Close'].item()
+        percent3 = round((dayMinus2 - dayMinus3)*100/dayMinus3,2)
+        percent2 = round((dayMinus1 - dayMinus2)*100/dayMinus2,2)
+        percent1 = round((day0 - dayMinus1)*100/dayMinus1,2)
+        
+        if percent1 >= 2 and percent2 >= 2 and percent3 >= 2:
+            pct_change = colorText.GREEN + (" (%.1f%%," % percent1) + (" %.1f%%," % percent2) + (" %.1f%%)" % percent3) + colorText.END
+            screenDict['LTP'] = colorText.GREEN + ("%.2f" % round(day0,2)) + pct_change + colorText.END
+            return True and self.getCandleType(data.head(1))
+        return False
+
+    # validate if RSI is within given range
+    def validateRSI(self, data, screenDict, saveDict, minRSI, maxRSI):
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        rsi = int(data.head(1)['RSI'][0])
+        saveDict['RSI'] = rsi
+        if(rsi >= minRSI and rsi <= maxRSI) and (rsi <= 70 and rsi >= 30):
+            screenDict['RSI'] = colorText.BOLD + colorText.GREEN + str(rsi) + colorText.END
+            return True
+        screenDict['RSI'] = colorText.BOLD + colorText.FAIL + str(rsi) + colorText.END
+        return False
+
+    # Validate if the stock is bullish in the short term
+    def validateShortTermBullish(self, data, screenDict, saveDict):
+        # https://chartink.com/screener/short-term-bullish
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        recent = data.head(1)
+        fk = 0 if len(data) < 3 else np.round(data['FASTK'][2], 5)
+        # Reverse the dataframe for ichimoku calculations with date in ascending order
+        df_new = data[::-1]
+        try:
+            df_new = df_new.rename(columns={'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Volume': 'volume'})
+            ichi = ichimoku(df_new,9,26,52,26)
+            df_new['kijun_sen'] = ichi['kijun_sen']
+            df_new['tenkan_sen'] = ichi['tenkan_sen']
+            df_new['senkou_span_a'] = ichi['senkou_span_a']
+            df_new['senkou_span_b'] = ichi['senkou_span_b']
+            df_new['cloud_green'] = ichi['cloud_green']
+            df_new['cloud_red'] = ichi['cloud_red']
+            # Reverse again to get the most recent date on top
+            df_new = df_new[::-1]
+            df_new = df_new.head(1)
+        except:
+            import traceback
+            traceback.print_exc()
+        aboveCloudTop = False
+        # baseline > cloud top (cloud is bound by span a and span b) and close is > cloud top
+        if df_new['cloud_green'][0]:
+            aboveCloudTop = df_new['kijun_sen'][0] > df_new['senkou_span_a'][0] and recent['Close'][0] > df_new['senkou_span_a'][0]
+        elif df_new['cloud_red'][0]:
+            aboveCloudTop = df_new['kijun_sen'][0] > df_new['senkou_span_b'][0] and recent['Close'][0] > df_new['senkou_span_b'][0]
+
+        # Latest Ichimoku baseline is < latest Ichimoku conversion line
+        if aboveCloudTop and df_new['kijun_sen'][0] < df_new['tenkan_sen'][0]:
+            # StochRSI crossed 20 and RSI > 50
+            if fk > 20 and recent['RSI'][0] > 50:
+                # condition of crossing the StochRSI main signal line from bottom to top 
+                if data['FASTD'][100] < data['FASTK'][100] and data['FASTD'][101] > data['FASTK'][101]:
+                    # close > 50 period SMA/EMA and 200 period SMA/EMA
+                    if(recent['SSMA'][0] > recent['SMA'][0] and recent['Close'][0] > recent['SSMA'][0] and recent['Close'][0] > recent['LMA'][0]):
+                        screenDict['MA-Signal'] = colorText.BOLD + colorText.GREEN + 'Bullish' + colorText.END
+                        saveDict['MA-Signal'] = 'Bullish'
+                        return True
+        return False
+
+    # Validate VPC
+    def validateVCP(self, data, screenDict, saveDict, stockName=None, window=3, percentageFromTop=3):
+        try:
+            percentageFromTop /= 100
+            data.reset_index(inplace=True)
+            data.rename(columns={'index':'Date'}, inplace=True)
+            data['tops'] = data['High'].iloc[list(argrelextrema(np.array(data['High']), np.greater_equal, order=window)[0])].head(4)
+            data['bots'] = data['Low'].iloc[list(argrelextrema(np.array(data['Low']), np.less_equal, order=window)[0])].head(4)
+            data = data.fillna(0)
+            data = data.replace([np.inf, -np.inf], 0)
+            tops = data[data.tops > 0]
+            bots = data[data.bots > 0]
+            highestTop = round(tops.describe()['High']['max'],1)
+            filteredTops = tops[tops.tops > (highestTop-(highestTop*percentageFromTop))]
+            # print(tops)
+            # print(filteredTops)
+            # print(tops.sort_values(by=['tops'], ascending=False))
+            # print(tops.describe())
+            # print(f"Till {highestTop-(highestTop*percentageFromTop)}")
+            if(filteredTops.equals(tops)):      # Tops are in the range
+                lowPoints = []
+                for i in range(len(tops)-1):
+                    endDate = tops.iloc[i]['Date']
+                    startDate = tops.iloc[i+1]['Date']
+                    lowPoints.append(data[(data.Date >= startDate) & (data.Date <= endDate)].describe()['Low']['min'])
+                lowPointsOrg = lowPoints
+                lowPoints.sort(reverse=True)
+                lowPointsSorted = lowPoints
+                ltp = data.head(1)['Close'][0]
+                if lowPointsOrg == lowPointsSorted and  ltp < highestTop and ltp > lowPoints[0]:
+                    screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + f'VCP (BO: {highestTop})' + colorText.END
+                    saveDict['Pattern'] = f'VCP (BO: {highestTop})'
+                    return True
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())
+        return False      
+
+    # Validate if volume of last day is higher than avg
+    def validateVolume(self, data, screenDict, saveDict, volumeRatio=2.5):
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        recent = data.head(1)
+        if recent['VolMA'][0] == 0: # Handles Divide by 0 warning
+            saveDict['Volume'] = "Unknown"
+            screenDict['Volume'] = colorText.BOLD + colorText.WARN + "Unknown" + colorText.END
+            return True
+        ratio = round(recent['Volume'][0]/recent['VolMA'][0],2)
+        saveDict['Volume'] = str(ratio)+"x"
+        if(ratio >= volumeRatio and ratio != np.nan and (not math.isinf(ratio)) and (ratio != 20)):
+            screenDict['Volume'] = colorText.BOLD + colorText.GREEN + str(ratio) + "x" + colorText.END
+            return True
+        screenDict['Volume'] = colorText.BOLD + colorText.FAIL + str(ratio) + "x" + colorText.END
+        return False
+
+    # Find if stock is validating volume spread analysis
+    def validateVolumeSpreadAnalysis(self, data, screenDict, saveDict):
+        try:
+            data = data.head(2)
+            try:
+                # Check for previous RED candles
+                # Current candle = 0th, Previous Candle = 1st for following logic
+                if data.iloc[1]['Open'] >= data.iloc[1]['Close']:
+                    spread1 = abs(data.iloc[1]['Open'] - data.iloc[1]['Close'])
+                    spread0 = abs(data.iloc[0]['Open'] - data.iloc[0]['Close'])
+                    lower_wick_spread0 = max(data.iloc[0]['Open'], data.iloc[0]['Close']) - data.iloc[0]['Low']
+                    vol1 = data.iloc[1]['Volume']
+                    vol0 = data.iloc[0]['Volume']
+                    if spread0 > spread1 and vol0 < vol1 and data.iloc[0]['Volume'] < data.iloc[0]['VolMA'] and data.iloc[0]['Close'] <= data.iloc[1]['Open'] and spread0 < lower_wick_spread0 and data.iloc[0]['Volume'] <= int(data.iloc[1]['Volume']*0.75):
+                        screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + 'Supply Drought' + colorText.END
+                        saveDict['Pattern'] = 'Supply Drought'
+                        return True
+                    if spread0 < spread1 and vol0 > vol1 and data.iloc[0]['Volume'] > data.iloc[0]['VolMA'] and data.iloc[0]['Close'] <= data.iloc[1]['Open']:
+                        screenDict['Pattern'] = colorText.BOLD + colorText.GREEN + 'Demand Rise' + colorText.END
+                        saveDict['Pattern'] = 'Demand Rise'
+                        return True
+            except IndexError:
+                pass
+            return False
+        except:
+            import traceback
+            traceback.print_exc()
+            return False
+
 
     '''
     # Find out trend for days to lookback

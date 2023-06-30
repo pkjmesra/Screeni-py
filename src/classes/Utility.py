@@ -63,7 +63,8 @@ class tools:
               "[+] Join Community Discussions: https://github.com/pranjal-joshi/Screeni-py/discussions" + colorText.END)
         print(colorText.BOLD + colorText.BLUE +
               "[+] Download latest software from https://github.com/pranjal-joshi/Screeni-py/releases/latest" + colorText.END)
-        input('')
+        input(colorText.BOLD + colorText.FAIL +
+                    "[+] Press any key to continue!" + colorText.END)
 
     # Save last screened result to pickle file
     def setLastScreenedResults(df):
