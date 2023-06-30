@@ -28,7 +28,7 @@ configManager = ConfigManager.tools()
 
 if __name__ == "__main__":
     if sys.platform.startswith('darwin'):
-        multiprocessing.set_start_method('spawn')
+        multiprocessing.set_start_method('forkserver')
 
     Utility.tools.clearScreen()
     if not configManager.checkConfigFile():
