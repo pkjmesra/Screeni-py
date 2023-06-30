@@ -17,7 +17,6 @@ from classes import Imports
 if Imports['scipy']:
     from scipy.signal import argrelextrema
     from scipy.stats import linregress
-from technical.indicators import ichimoku
 from classes.ColorText import colorText
 from classes.SuppressOutput import SuppressOutput
 
@@ -639,7 +638,8 @@ class tools:
         df_new = data[::-1]
         try:
             df_new = df_new.rename(columns={'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Volume': 'volume'})
-            ichi = ichimoku(df_new,9,26,52,26)
+            ichi = pktalib.ichimoku(df_new,9,26,52,26)
+            print(ichi)
             df_new['kijun_sen'] = ichi['kijun_sen']
             df_new['tenkan_sen'] = ichi['tenkan_sen']
             df_new['senkou_span_a'] = ichi['senkou_span_a']

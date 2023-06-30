@@ -43,6 +43,10 @@ class pktalib:
             return talib.STOCHRSI(close,timeperiod,fastk_period,fastd_period,fastd_matype)
     
     @classmethod
+    def ichimoku(self, df, tenkan=None, kijun=None, senkou=None, include_chikou=True, offset=None):
+        return talib.ichimoku(df['High'],df['Low'],df['Close'], tenkan, kijun, senkou, False, 26)
+
+    @classmethod
     def CDLMORNINGSTAR(self, open, high, low, close):
         try:
             return talib.cdl_pattern(open,high,low,close,'morningstar')
