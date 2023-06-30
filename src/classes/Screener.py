@@ -9,14 +9,14 @@ import sys
 import math
 import numpy as np
 import pandas as pd
-import talib
 import joblib
-import keras
 import classes.Utility as Utility
-from talib import stream
-from sklearn.preprocessing import StandardScaler
-from scipy.signal import argrelextrema
-from scipy.stats import linregress
+from classes.Pktalib import pktalib
+from classes import Imports
+# from sklearn.preprocessing import StandardScaler
+if Imports['scipy']:
+    from scipy.signal import argrelextrema
+    from scipy.stats import linregress
 from technical.indicators import ichimoku
 from classes.ColorText import colorText
 from classes.SuppressOutput import SuppressOutput
@@ -88,9 +88,9 @@ class tools:
             maLength = 20
         data = data[::-1]
         if self.configManager.useEMA:
-            maRev = talib.EMA(data['Close'],timeperiod=maLength)
+            maRev = pktalib.EMA(data['Close'],timeperiod=maLength)
         else:
-            maRev = talib.MA(data['Close'],timeperiod=maLength)
+            maRev = pktalib.MA(data['Close'],timeperiod=maLength)
         data.insert(14,'maRev',maRev)
         data = data[::-1].head(3)
         if data.equals(data[(data.Close >= (data.maRev - (data.maRev*percentage))) & (data.Close <= (data.maRev + (data.maRev*percentage)))]) and data.head(1)['Close'][0] >= data.head(1)['maRev'][0]:
@@ -108,11 +108,12 @@ class tools:
         data = data.set_index(np.arange(len(data)))
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
-        with SuppressOutput(suppress_stdout=True,suppress_stderr=True):
-            data['tops'] = data['Close'].iloc[list(argrelextrema(np.array(data['Close']), np.greater_equal, order=1)[0])]
-        data = data.fillna(0)
-        data = data.replace([np.inf, -np.inf], 0)
         try:
+            with SuppressOutput(suppress_stdout=True,suppress_stderr=True):
+                data['tops'] = data['Close'].iloc[list(pktalib.argrelextrema(np.array(data['Close']), np.greater_equal, order=1)[0])]
+            data = data.fillna(0)
+            data = data.replace([np.inf, -np.inf], 0)
+
             try:
                 if len(data) < daysToLookback:
                     raise StockDataNotAdequate
@@ -237,7 +238,7 @@ class tools:
         data_tuple = fetcher.fetchFiveEmaData()
         for cnt in range(len(data_tuple)):
             d = data_tuple[cnt]
-            d['5EMA'] = talib.EMA(d['Close'],timeperiod=5)
+            d['5EMA'] = pktalib.EMA(d['Close'],timeperiod=5)
             d = d[col_names]
             d = d.dropna().round(2)
 
@@ -307,9 +308,9 @@ class tools:
         if daysToLookback is None:
             daysToLookback = self.configManager.daysToLookback
         if self.configManager.useEMA:
-            sma = talib.EMA(data['Close'],timeperiod=50)
-            lma = talib.EMA(data['Close'],timeperiod=200)
-            ssma = talib.EMA(data['Close'],timeperiod=9)
+            sma = pktalib.EMA(data['Close'],timeperiod=50)
+            lma = pktalib.EMA(data['Close'],timeperiod=200)
+            ssma = pktalib.EMA(data['Close'],timeperiod=9)
             data.insert(6,'SMA',sma)
             data.insert(7,'LMA',lma)
             data.insert(8,'SSMA',ssma)
@@ -321,13 +322,13 @@ class tools:
             data.insert(7,'LMA',lma['Close'])
             data.insert(8,'SSMA',ssma['Close'])
         vol = data.rolling(window=20).mean()
-        rsi = talib.RSI(data.fillna(0)['Close'], timeperiod=14)
+        rsi = pktalib.RSI(data['Close'], timeperiod=14)
         data.insert(9,'VolMA',vol['Volume'])
         data.insert(10,'RSI',rsi)
-        cci = talib.CCI(data['High'], data['Low'], data['Close'], timeperiod=14)
+        cci = pktalib.CCI(data['High'], data['Low'], data['Close'], timeperiod=14)
         data.insert(11,'CCI',cci)
         x = len(data["Close"])
-        fastk, fastd = talib.STOCHRSI(data["Close"].values, timeperiod=14, fastk_period=5, fastd_period=3, fastd_matype=0)
+        fastk, fastd = pktalib.STOCHRSI(data["Close"].values, timeperiod=14, fastk_period=5, fastd_period=3, fastd_matype=0)
         data.insert(12,'FASTK',fastk)
         data.insert(13,'FASTD',fastd)
         data = data[::-1]               # Reverse the dataframe
@@ -677,8 +678,8 @@ class tools:
             percentageFromTop /= 100
             data.reset_index(inplace=True)
             data.rename(columns={'index':'Date'}, inplace=True)
-            data['tops'] = data['High'].iloc[list(argrelextrema(np.array(data['High']), np.greater_equal, order=window)[0])].head(4)
-            data['bots'] = data['Low'].iloc[list(argrelextrema(np.array(data['Low']), np.less_equal, order=window)[0])].head(4)
+            data['tops'] = data['High'].iloc[list(pktalib.argrelextrema(np.array(data['High']), np.greater_equal, order=window)[0])].head(4)
+            data['bots'] = data['Low'].iloc[list(pktalib.argrelextrema(np.array(data['Low']), np.less_equal, order=window)[0])].head(4)
             data = data.fillna(0)
             data = data.replace([np.inf, -np.inf], 0)
             tops = data[data.tops > 0]

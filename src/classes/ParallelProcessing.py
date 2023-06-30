@@ -14,6 +14,7 @@ import os
 import pytz
 from queue import Empty
 from datetime import datetime
+from classes import Imports
 import classes.Fetcher as Fetcher
 import classes.Screener as Screener
 import classes.Utility as Utility
@@ -184,7 +185,8 @@ class StockConsumer(multiprocessing.Process):
                 isBuyingTrendline = False
                 if executeOption == 7 and respChartPattern == 5:
                     with SuppressOutput(suppress_stderr=True, suppress_stdout=True):
-                        isBuyingTrendline = screener.findTrendlines(fullData, screeningDictionary, saveDictionary)
+                        if Imports['scipy']:
+                            isBuyingTrendline = screener.findTrendlines(fullData, screeningDictionary, saveDictionary)
 
                 with self.screenResultsCounter.get_lock():
                     if executeOption == 0:

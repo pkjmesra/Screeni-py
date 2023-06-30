@@ -16,7 +16,9 @@ import pickle
 import requests
 import time
 import joblib
-import keras
+from classes import Imports
+if Imports['keras']:
+    import keras
 import pandas as pd
 from alive_progress import alive_bar
 from tabulate import tabulate
@@ -349,7 +351,7 @@ class tools:
                     except Exception as e:
                         print("[!] Download Error - " + str(e))
             time.sleep(3)
-        model = keras.models.load_model(files[0])
+            model = keras.models.load_model(files[0]) if Imports['keras'] else None
         pkl = joblib.load(files[1])
         return model, pkl
 
