@@ -5,6 +5,8 @@
 
 # Keep module imports prior to classes
 import os
+import sys
+import multiprocessing
 import argparse
 
 import classes.ConfigManager as ConfigManager
@@ -25,6 +27,9 @@ args = argParser.parse_args()
 configManager = ConfigManager.tools()
 
 if __name__ == "__main__":
+    if sys.platform.startswith('darwin'):
+        multiprocessing.set_start_method('fork')
+
     Utility.tools.clearScreen()
     if not configManager.checkConfigFile():
         configManager.setConfig(ConfigManager.parser, default=True, showFileCreatedText=False)

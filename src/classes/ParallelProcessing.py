@@ -26,7 +26,6 @@ if sys.platform.startswith('win'):
     import multiprocessing.popen_spawn_win32 as forking
 else:
     import multiprocessing.popen_fork as forking
-    multiprocessing.set_start_method('fork')
 
 class StockConsumer(multiprocessing.Process):
 
