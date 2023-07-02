@@ -337,6 +337,23 @@ class tools:
         trimmedData = data.head(daysToLookback)
         return (fullData, trimmedData)
 
+    # Validate if the stock is bullish in the short term
+    def validate15MinutePriceVolumeBreakout(self, data):
+        # https://chartink.com/screener/15-min-price-volume-breakout
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        data = data[::-1]               # Reverse the dataframe so that its the oldest date first
+        data['SMA20'] = pktalib.SMA(data['Close'],20)
+        data['SMA20V'] = pktalib.SMA(data['Volume'],20)
+        data = data[::-1]               # Reverse the dataframe so that it's the most recent date first
+        recent = data.head(3)
+        cond1 = recent['Close'][0] > recent['Close'][1]
+        cond2 = cond1 and (recent['Close'][0] > recent['SMA20'][0])
+        cond3 = cond2 and (recent['Close'][1] > recent['High'][2])
+        cond4 = cond3 and (recent['Volume'][0] > recent['SMA20V'][0])
+        cond5 = cond4 and (recent['Volume'][1] > recent['SMA20V'][0])
+        return cond5
+    
     # validate if CCI is within given range
     def validateCCI(self, data, screenDict, saveDict, minCCI, maxCCI):
         data = data.fillna(0)
@@ -639,6 +656,8 @@ class tools:
         try:
             df_ichi = df_new.rename(columns={'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Volume': 'volume'})
             ichi = pktalib.ichimoku(df_ichi,9,26,52,26)
+            if ichi is None:
+                return False
             df_new = pd.concat([df_new, ichi], axis=1)
             # Reverse again to get the most recent date on top
             df_new = df_new[::-1]
@@ -646,8 +665,7 @@ class tools:
             df_new['cloud_green'] = df_new['ISA_9'][0] > df_new['ISB_26'][0]
             df_new['cloud_red'] = df_new['ISB_26'][0] > df_new['ISA_9'][0]
         except:
-            import traceback
-            traceback.print_exc()
+            pass
         aboveCloudTop = False
         # baseline > cloud top (cloud is bound by span a and span b) and close is > cloud top
         if df_new['cloud_green'][0]:

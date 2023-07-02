@@ -13,7 +13,14 @@ class pktalib:
             return talib.ema(close,timeperiod)
         except:    
             return talib.EMA(close,timeperiod)
-    
+
+    @classmethod
+    def SMA(self, close, timeperiod):
+        try:
+            return talib.sma(close,timeperiod)
+        except:    
+            return talib.SMA(close,timeperiod)
+        
     @classmethod
     def MA(self, close, timeperiod):
         try:

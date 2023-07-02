@@ -122,7 +122,8 @@ class StockConsumer(multiprocessing.Process):
                 isMaReversal = screener.validateMovingAverages(
                     processedData, screeningDictionary, saveDictionary, maRange=1.25)
                 isShortTermBullish = screener.validateShortTermBullish(
-                    fullData, screeningDictionary, saveDictionary)
+                    fullData.copy(), screeningDictionary, saveDictionary)
+                is15MinutePriceVolumeBreakout = screener.validate15MinutePriceVolumeBreakout(fullData.copy())
                 isVolumeHigh = screener.validateVolume(
                     processedData, screeningDictionary, saveDictionary, volumeRatio= volumeRatio)
                 isBreaking = screener.findBreakout(
@@ -252,6 +253,10 @@ class StockConsumer(multiprocessing.Process):
                     if executeOption == 11 and isShortTermBullish:
                         self.screenResultsCounter.value += 1
                         return screeningDictionary, saveDictionary
+                    if executeOption == 12 and is15MinutePriceVolumeBreakout:
+                        self.screenResultsCounter.value += 1
+                        return screeningDictionary, saveDictionary
+                    
         except KeyboardInterrupt:
             # Capturing Ctr+C Here isn't a great idea
             pass
