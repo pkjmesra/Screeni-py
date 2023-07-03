@@ -1,9 +1,12 @@
 import numpy as np
-
-try:
+from classes import Imports
+if Imports['talib']:
     import talib
-except:
-    import pandas_ta as talib
+else:
+    try:
+        import talib
+    except:
+        import pandas_ta as talib
 
 class pktalib:
 
@@ -27,7 +30,14 @@ class pktalib:
             return talib.ma(close,timeperiod)
         except:
             return talib.MA(close,timeperiod)
-        
+
+    @classmethod
+    def MACD(self, close, fast, slow, signal):
+        try:
+            return talib.macd(close,fast,slow,signal)
+        except:
+            return talib.MACD(close,fast,slow,signal)
+
     @classmethod
     def RSI(self, close, timeperiod):
         try:

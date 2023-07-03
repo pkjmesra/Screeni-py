@@ -81,6 +81,23 @@ class tools:
             screenDict['Breaking-Out'] = colorText.BOLD + colorText.FAIL + "BO: " + str(hc) + colorText.END
             return False
 
+    # Find stocks that are bullish intraday: RSI crosses 55, Macd Histogram positive, price above EMA 10 
+    def findBullishIntradayRSIMACD(self, data):
+        # https://chartink.com/screener/15-min-price-volume-breakout
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        data = data[::-1]               # Reverse the dataframe so that its the oldest date first
+        data['RSI12'] = pktalib.RSI(data['Close'],12)
+        data['EMA10'] = pktalib.EMA(data['Close'],10)
+        data['EMA200'] = pktalib.EMA(data['Close'],200)
+        macd = pktalib.MACD(data['Close'],10,18,9)[2].tail(1)
+        recent = data.tail(1)
+        cond1 = recent['RSI12'][0] > 55
+        cond2 = cond1 and (macd.iloc[:1][0] > 0)
+        cond3 = cond2 and (recent['Close'][0] > recent['EMA10'][0])
+        cond4 = cond3 and (recent['Close'][0] > recent['EMA200'][0])
+        return cond4
+    
     # Find stock reversing at given MA
     def findReversalMA(self, data, screenDict, saveDict, maLength, percentage=0.015):
         if maLength is None:

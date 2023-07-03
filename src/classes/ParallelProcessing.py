@@ -124,6 +124,7 @@ class StockConsumer(multiprocessing.Process):
                 isShortTermBullish = screener.validateShortTermBullish(
                     fullData.copy(), screeningDictionary, saveDictionary)
                 is15MinutePriceVolumeBreakout = screener.validate15MinutePriceVolumeBreakout(fullData.copy())
+                isBullishIntradayRSIMACD = screener.findBullishIntradayRSIMACD(fullData.copy())
                 isVolumeHigh = screener.validateVolume(
                     processedData, screeningDictionary, saveDictionary, volumeRatio= volumeRatio)
                 isBreaking = screener.findBreakout(
@@ -254,6 +255,9 @@ class StockConsumer(multiprocessing.Process):
                         self.screenResultsCounter.value += 1
                         return screeningDictionary, saveDictionary
                     if executeOption == 12 and is15MinutePriceVolumeBreakout:
+                        self.screenResultsCounter.value += 1
+                        return screeningDictionary, saveDictionary
+                    if executeOption == 13 and isBullishIntradayRSIMACD:
                         self.screenResultsCounter.value += 1
                         return screeningDictionary, saveDictionary
                     

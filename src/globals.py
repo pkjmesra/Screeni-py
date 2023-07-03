@@ -309,8 +309,8 @@ def main(testing=False, testBuild=False, downloadOnly=False):
         input(colorText.BOLD + colorText.FAIL +
               "[+] Press any key to Exit!" + colorText.END)
         sys.exit(0)
-    if executeOption >= 13 and executeOption <= 39:
-        print(colorText.BOLD + colorText.FAIL + '\n[+] Error: Option 13 to 39 Not implemented yet! Press any key to continue.' + colorText.END) 
+    if executeOption >= 14 and executeOption <= 39:
+        print(colorText.BOLD + colorText.FAIL + '\n[+] Error: Option 14 to 39 Not implemented yet! Press any key to continue.' + colorText.END) 
         input('')
         main()
     if (not str(tickerOption).isnumeric() and tickerOption in 'WEMNZ') or (str(tickerOption).isnumeric() and (tickerOption >= 0 and tickerOption < 15)):
