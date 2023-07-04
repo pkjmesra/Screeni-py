@@ -162,7 +162,7 @@ def initScannerExecution():
     7 > Stocks making Chart Patterns    8 > CCI outside of the given range
     9 > Volume gainers                 10 > Closing at least 2% up since last 3 days
    11 > Short term bullish stocks      12 > 15 Minute Price & Volume breakout
-   13 > Bullish RSI & MACD Intraday    14 > NR4 Day
+   13 > Bullish RSI & MACD Intraday    14 > NR4 Daily Today
    15 > 52 week low breakout           16 > 10 days low breakout
    17 > 52 week high breakout          18 > Bullish Aroon Crossover
    19 > MACD Historgram x below 0      20 > RSI entering bullish territory
@@ -309,8 +309,8 @@ def main(testing=False, testBuild=False, downloadOnly=False):
         input(colorText.BOLD + colorText.FAIL +
               "[+] Press any key to Exit!" + colorText.END)
         sys.exit(0)
-    if executeOption >= 14 and executeOption <= 39:
-        print(colorText.BOLD + colorText.FAIL + '\n[+] Error: Option 14 to 39 Not implemented yet! Press any key to continue.' + colorText.END) 
+    if executeOption >= 15 and executeOption <= 39:
+        print(colorText.BOLD + colorText.FAIL + '\n[+] Error: Option 15 to 39 Not implemented yet! Press any key to continue.' + colorText.END) 
         input('')
         main()
     if (not str(tickerOption).isnumeric() and tickerOption in 'WEMNZ') or (str(tickerOption).isnumeric() and (tickerOption >= 0 and tickerOption < 15)):

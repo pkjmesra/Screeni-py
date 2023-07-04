@@ -98,6 +98,27 @@ class tools:
         cond4 = cond3 and (recent['Close'][0] > recent['EMA200'][0])
         return cond4
     
+    # Find stocks that are bullish intraday: RSI crosses 55, Macd Histogram positive, price above EMA 10 
+    def findNR4Day(self, data):
+        # https://chartink.com/screener/nr4-daily-today
+        if data.tail(1)['Volume'][0] <= 50000:
+            return False
+        data = data.fillna(0)
+        data = data.replace([np.inf, -np.inf], 0)
+        data = data[::-1]               # Reverse the dataframe so that its the oldest date first
+        data['SMA10'] = pktalib.SMA(data['Close'],10)
+        data['SMA50'] = pktalib.SMA(data['Close'],50)
+        data['SMA200'] = pktalib.SMA(data['Close'],200)
+        recent = data.tail(5)
+        recent=recent[::-1]
+        cond1 = (recent['High'][0] - recent['Low'][0]) < (recent['High'][1] - recent['Low'][1])
+        cond2 = cond1 and (recent['High'][0] - recent['Low'][0]) < (recent['High'][2] - recent['Low'][2])
+        cond3 = cond2 and (recent['High'][0] - recent['Low'][0]) < (recent['High'][3] - recent['Low'][3])
+        cond4 = cond3 and (recent['High'][0] - recent['Low'][0]) < (recent['High'][4] - recent['Low'][4])
+        cond5 = cond4 and (recent['SMA10'][0] > recent['SMA50'][0])
+        cond6 = cond5 and (recent['SMA50'][0] > recent['SMA200'][0])
+        return cond6
+    
     # Find stock reversing at given MA
     def findReversalMA(self, data, screenDict, saveDict, maLength, percentage=0.015):
         if maLength is None:
