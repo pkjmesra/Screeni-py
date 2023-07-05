@@ -229,29 +229,36 @@ def main(testing=False, testBuild=False, downloadOnly=False):
     elif downloadOnly:
         tickerOption, executeOption = 12, 2
     else:
+        executeOption = 2
         try:
             menuOption = initExecution()
             if menuOption == 'H':
                 Utility.tools.showDevInfo()
                 main()
+                return
             elif menuOption == 'U':
                 OTAUpdater.checkForUpdate(getProxyServer(), VERSION)
                 main()
+                return
             elif menuOption == 'T':
                 toggleUserConfig()
                 main()
+                return
             elif menuOption == 'E':
                 configManager.setConfig(ConfigManager.parser)
                 main()
+                return
             elif menuOption == 'X':
                 tickerOption, executeOption = initScannerExecution()
             elif menuOption == 'Y':
                 configManager.showConfigFile()
                 main()
+                return
             else:
                 print('Work in progress! Try selecting a different option.')
                 sleep(3)
                 main()
+                return
         except KeyboardInterrupt:
             input(colorText.BOLD + colorText.FAIL +
                 "[+] Press any key to Exit!" + colorText.END)
@@ -275,14 +282,17 @@ def main(testing=False, testBuild=False, downloadOnly=False):
                   '\n[+] Error: Invalid values for RSI! Values should be in range of 0 to 100. Screening aborted.' + colorText.END)
             input('')
             main()
+            return
     if executeOption == 6:
         reversalOption, maLength = Utility.tools.promptReversalScreening()
         if reversalOption is None or reversalOption == 0:
             main()
+            return
     if executeOption == 7:
         respChartPattern, insideBarToLookback = Utility.tools.promptChartPatterns()
         if insideBarToLookback is None:
             main()
+            return
     if executeOption == 8:
         minRSI, maxRSI = Utility.tools.promptCCIValues()
         if (not minRSI and not maxRSI):
@@ -290,6 +300,7 @@ def main(testing=False, testBuild=False, downloadOnly=False):
                   '\n[+] Error: Invalid values for CCI! Values should be in range of -300 to 500. Screening aborted.' + colorText.END)
             input('')
             main()
+            return
     if executeOption == 9:
         volumeRatio = Utility.tools.promptVolumeMultiplier()
         if (volumeRatio <= 0):
@@ -297,11 +308,13 @@ def main(testing=False, testBuild=False, downloadOnly=False):
                   '\n[+] Error: Invalid values for Volume Ratio! Value should be a positive number. Screening aborted.' + colorText.END)
             input('')
             main()
+            return
         else:
             configManager.volumeRatio = float(volumeRatio)
     if executeOption == 42:
         Utility.tools.getLastScreenedResults()
         main()
+        return
     if tickerOption == 'M' or executeOption == 'M':
         main()
         return
@@ -313,6 +326,7 @@ def main(testing=False, testBuild=False, downloadOnly=False):
         print(colorText.BOLD + colorText.FAIL + '\n[+] Error: Option 15 to 39 Not implemented yet! Press any key to continue.' + colorText.END) 
         input('')
         main()
+        return
     if (not str(tickerOption).isnumeric() and tickerOption in 'WEMNZ') or (str(tickerOption).isnumeric() and (tickerOption >= 0 and tickerOption < 15)):
         configManager.getConfig(ConfigManager.parser)
         try:

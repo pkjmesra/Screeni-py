@@ -5,8 +5,9 @@ test/*.ini
 __pycache__/
 .vscode/
 *.xlsx
-stock*.pkl
-*results*.pkl
+*.pkl
 *.spec
 .DS_Store
 Help
+*.h5
+*.ini

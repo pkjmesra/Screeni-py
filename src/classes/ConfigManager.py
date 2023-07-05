@@ -156,14 +156,10 @@ class tools:
                     parser.get('config', 'consolidationPercentage'))
                 self.daysToLookback = int(
                     parser.get('config', 'daysToLookback'))
-                if 'n' not in str(parser.get('config', 'shuffle')).lower():
-                    self.shuffleEnabled = True
-                if 'n' not in str(parser.get('config', 'cachestockdata')).lower():
-                    self.cacheEnabled = True
-                if 'n' not in str(parser.get('config', 'onlyStageTwoStocks')).lower():
-                    self.stageTwo = True
-                if 'y' not in str(parser.get('config', 'useEMA')).lower():
-                    self.useEMA = False
+                self.shuffleEnabled = True if 'n' not in str(parser.get('config', 'shuffle')).lower() else False
+                self.cacheEnabled = True if 'n' not in str(parser.get('config', 'cachestockdata')).lower() else False
+                self.stageTwo = True if 'n' not in str(parser.get('config', 'onlyStageTwoStocks')).lower() else False
+                self.useEMA = False if 'y' not in str(parser.get('config', 'useEMA')).lower() else True
             except configparser.NoOptionError:
                 input(colorText.BOLD + colorText.FAIL +
                       '[+] Screenipy requires user configuration again. Press enter to continue..' + colorText.END)
