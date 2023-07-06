@@ -20,7 +20,7 @@ from classes import Imports
 if Imports['keras']:
     import keras
 import warnings
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageColor
 import pandas as pd
 from alive_progress import alive_bar
 from tabulate import tabulate
@@ -29,14 +29,15 @@ from classes.ColorText import colorText
 from classes.Changelog import VERSION, changelog
 import classes.ConfigManager as ConfigManager
 
-art = colorText.GREEN + '''
-    $$$$$$   $$   $$   $$$$$                                                        
-    $$   $$  $$  $$   $$   $$                  $$$$    $$$$            $$$$         
-    $$   $$  $$$$$     $$$      $$$$$  $$ $$  $$  $$  $$  $$  $$$$$   $$  $$  $$ $$ 
-    $$$$$$   $$  $$      $$$   $$      $$$ $  $$$$$$  $$$$$$  $$  $$  $$$$$$  $$$ $ 
-    $$       $$   $$  $$   $$  $$      $$     $$      $$      $$  $$  $$      $$    
-    $$       $$   $$   $$$$$    $$$$$  $$      $$$$$   $$$$$  $$  $$   $$$$$  $$    
-''' + colorText.END
+artText = '''
+    $$$$$$      $$   $$      $$$$$                                                        
+    $$    $$    $$  $$      $$   $$                         $$$$       $$$$                  $$$$         
+    $$    $$    $$$$$        $$$       $$$$$     $$ $$     $$  $$     $$  $$     $$$$$      $$  $$     $$ $$ 
+    $$$$$$      $$  $$         $$$     $$        $$$ $     $$$$$$     $$$$$$     $$  $$     $$$$$$     $$$ $ 
+    $$          $$   $$     $$   $$    $$        $$        $$         $$         $$  $$     $$         $$    
+    $$          $$   $$      $$$$$     $$$$$     $$        $$$$$      $$$$$      $$  $$     $$$$$      $$    
+'''
+art = colorText.GREEN + artText + colorText.END
 
 lastScreened = 'last_screened_results.pkl'
 
@@ -97,10 +98,12 @@ class tools:
     def tableToImage(table, filename):
         warnings.filterwarnings('ignore', category=DeprecationWarning)
         font = ImageFont.truetype("courbd.ttf", 15)
+        arttext_width, arttext_height = font.getsize_multiline(artText)
         text_width, text_height = font.getsize_multiline(table)
-        im = Image.new("RGB", (text_width + 15, text_height + 15), "white")
+        im = Image.new("RGB", (text_width + 15, arttext_height + text_height + 15), "black")
         draw = ImageDraw.Draw(im)
-        draw.text((7, 7), table, font=font, fill="black")
+        draw.text((7, 7), artText, font=font, fill="green")
+        draw.text((7, 8 + arttext_height), table, font=font, fill="white")
         # im.show()
         im.save(filename, 'PNG')
         

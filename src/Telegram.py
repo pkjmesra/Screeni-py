@@ -95,26 +95,28 @@ def send_message(message, parse_type = ParseMode.HTML, list_png = None):
     #     # print(telegram_msg)
     #     # print(telegram_msg.content)
 
-def send_photo(photoFilePath,text_html = "", message_id = None):
+def send_photo(photoFilePath, message = "", message_id = None):
+    init()
     method = "/sendPhoto"
     global chat_idADMIN, botsUrl, Channel_Id, LIST_PEOPLE_IDS_CHAT, TOKEN
     photo = open(photoFilePath, "rb")
     if message_id is not None:
-        params = {'chat_id': Channel_Id, 'caption' : text_html,'parse_mode':ParseMode.HTML, 'reply_to_message_id':message_id}
+        params = {'chat_id': Channel_Id, 'caption' : message,'parse_mode':ParseMode.HTML, 'reply_to_message_id':message_id}
     else:
-        params = {'chat_id': Channel_Id, 'caption': text_html, 'parse_mode': ParseMode.HTML}
+        params = {'chat_id': Channel_Id, 'caption': message, 'parse_mode': ParseMode.HTML}
     files = {'photo': photo}
     resp = requests.post(botsUrl + method, params, files=files)
     return resp
 
-def send_document(documentFilePath,text_html = "", message_id = None):
+def send_document(documentFilePath, message="", message_id = None):
+    init()
     document = open(documentFilePath, "rb")
     global chat_idADMIN, botsUrl, Channel_Id, LIST_PEOPLE_IDS_CHAT, TOKEN
     url = f"https://api.telegram.org/bot{TOKEN}/sendDocument"
     if message_id is not None:
-        params = {'chat_id': Channel_Id, 'caption' : text_html,'parse_mode':ParseMode.HTML, 'reply_to_message_id':message_id}
+        params = {'chat_id': Channel_Id, 'caption' : message,'parse_mode':ParseMode.HTML, 'reply_to_message_id':message_id}
     else:
-        params = {'chat_id': Channel_Id, 'caption': text_html, 'parse_mode': ParseMode.HTML}
+        params = {'chat_id': Channel_Id, 'caption': message, 'parse_mode': ParseMode.HTML}
     files={'document': document}
     method = "/sendDocument"
     resp = requests.post(botsUrl + method, params, files=files)

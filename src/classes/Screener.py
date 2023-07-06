@@ -652,7 +652,7 @@ class tools:
         return False
 
     # Validate if the stock prices are at least rising by 2% for the last 3 sessions
-    def validatePriceRisingByAtLeast2Percent(self, data, screenDict):
+    def validatePriceRisingByAtLeast2Percent(self, data, screenDict, saveDict):
         data = data.fillna(0)
         data = data.replace([np.inf, -np.inf], 0)
         data = data.head(4)
@@ -665,8 +665,10 @@ class tools:
         percent1 = round((day0 - dayMinus1)*100/dayMinus1,2)
         
         if percent1 >= 2 and percent2 >= 2 and percent3 >= 2:
-            pct_change = colorText.GREEN + (" (%.1f%%," % percent1) + (" %.1f%%," % percent2) + (" %.1f%%)" % percent3) + colorText.END
+            pct_change_text = (" (%.1f%%," % percent1) + (" %.1f%%," % percent2) + (" %.1f%%)" % percent3)
+            pct_change = colorText.GREEN + pct_change_text + colorText.END
             screenDict['LTP'] = colorText.GREEN + ("%.2f" % round(day0,2)) + pct_change + colorText.END
+            saveDict['LTP'] = ("%.2f" % round(day0,2)) + pct_change_text
             return True and self.getCandleType(data.head(1))
         return False
 
