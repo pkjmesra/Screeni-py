@@ -97,12 +97,13 @@ class tools:
 
     def tableToImage(table, filename):
         warnings.filterwarnings('ignore', category=DeprecationWarning)
-        font = ImageFont.truetype("courbd.ttf", 15)
-        arttext_width, arttext_height = font.getsize_multiline(artText)
+        artfont = ImageFont.truetype("courbd.ttf", 15)
+        font = ImageFont.truetype("courbd.ttf", 20)
+        arttext_width, arttext_height = artfont.getsize_multiline(artText)
         text_width, text_height = font.getsize_multiline(table)
         im = Image.new("RGB", (text_width + 15, arttext_height + text_height + 15), "black")
         draw = ImageDraw.Draw(im)
-        draw.text((7, 7), artText, font=font, fill="green")
+        draw.text((7, 7), artText, font=artfont, fill="green")
         draw.text((7, 8 + arttext_height), table, font=font, fill="white")
         # im.show()
         im.save(filename, 'PNG')

@@ -85,7 +85,13 @@ def send_message(message, parse_type = ParseMode.HTML, list_png = None):
     if list_png is None or any(elem is None for elem in list_png):
         for people_id in LIST_PEOPLE_IDS_CHAT:
             url = botsUrl + "/sendMessage?chat_id={}&text={}&parse_mode={parse_mode}".format(people_id, message,parse_mode=parse_type)
-            print(requests.get(url).json())
+            try:
+                resp = requests.get(url)
+            except:
+                from time import sleep
+                sleep(2)
+                resp = requests.get(url)
+            return resp
     # else:
     #     for people_id in LIST_PEOPLE_IDS_CHAT:
     #         resp_media = __send_media_group(people_id, list_png, caption=message, reply_to_message_id=None)
@@ -105,7 +111,12 @@ def send_photo(photoFilePath, message = "", message_id = None):
     else:
         params = {'chat_id': Channel_Id, 'caption': message, 'parse_mode': ParseMode.HTML}
     files = {'photo': photo}
-    resp = requests.post(botsUrl + method, params, files=files)
+    try:
+        resp = requests.post(botsUrl + method, params, files=files)
+    except:
+        from time import sleep
+        sleep(2)
+        resp = requests.post(botsUrl + method, params, files=files)
     return resp
 
 def send_document(documentFilePath, message="", message_id = None):
@@ -119,7 +130,12 @@ def send_document(documentFilePath, message="", message_id = None):
         params = {'chat_id': Channel_Id, 'caption': message, 'parse_mode': ParseMode.HTML}
     files={'document': document}
     method = "/sendDocument"
-    resp = requests.post(botsUrl + method, params, files=files)
+    try:
+        resp = requests.post(botsUrl + method, params, files=files)
+    except:
+        from time import sleep
+        sleep(2)
+        resp = requests.post(botsUrl + method, params, files=files)
     return resp
     # content = response.content.decode("utf8")
     # js = json.loads(content)
