@@ -44,6 +44,7 @@ loadedStockData = False
 loadCount = 0
 maLength = None
 newlyListedOnly = False
+productionbuild = False
 
 configManager = ConfigManager.tools()
 fetcher = Fetcher.tools(configManager)
@@ -266,8 +267,9 @@ def initScannerExecution():
     return tickerOption, executeOption
 
 # Main function
-def main(testing=False, testBuild=False, downloadOnly=False):
-    global menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly
+def main(testing=False, testBuild=False, downloadOnly=False, prodbuild=False):
+    global productionbuild,menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly
+    productionbuild = prodbuild
     screenCounter = multiprocessing.Value('i', 1)
     screenResultsCounter = multiprocessing.Value('i', 0)
     keyboardInterruptEvent = multiprocessing.Manager().Event()
@@ -571,6 +573,7 @@ def main(testing=False, testBuild=False, downloadOnly=False):
             inplace=True
         )
         Utility.tools.clearScreen()
+        menuChoiceHierarchy = menuChoiceHierarchy + ' (Data Period: ' + configManager.period + ', Candle Duration: ' + configManager.duration + ')'
         print(colorText.BOLD + colorText.FAIL + 'You chose: ' + menuChoiceHierarchy + colorText.END)
         tabulated_results = tabulate(screenResults, headers='keys', tablefmt='psql')
         print(tabulated_results)

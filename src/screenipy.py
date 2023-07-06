@@ -19,6 +19,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 # Argument Parsing for test purpose
 argParser = argparse.ArgumentParser()
 argParser.add_argument('-t', '--testbuild', action='store_true', help='Run in test-build mode', required=False)
+argParser.add_argument('-p', '--prodbuild', action='store_true', help='Run in production-build mode', required=False)
 argParser.add_argument('-d', '--download', action='store_true', help='Only Download Stock data in .pkl file', required=False)
 argParser.add_argument('-o', '--options', action='store_true', help='Pass selected options in the <MainMenu>:<SubMenu>:<SubMenu>... format. For example, 12:6:3', required=False)
 argParser.add_argument('-v', action='store_true')        # Dummy Arg for pytest -v
@@ -35,10 +36,10 @@ if __name__ == "__main__":
         configManager.setConfig(ConfigManager.parser, default=True, showFileCreatedText=False)
     if args.testbuild:
         print(colorText.BOLD + colorText.FAIL +"[+] Started in TestBuild mode!" + colorText.END)
-        main(testBuild=True)
+        main(testBuild=True, prodbuild=args.prodbuild)
     elif args.download:
         print(colorText.BOLD + colorText.FAIL +"[+] Download ONLY mode! Stocks will not be screened!" + colorText.END)
-        main(downloadOnly=True)
+        main(downloadOnly=True, prodbuild=args.prodbuild)
     else:
         try:
             while True:

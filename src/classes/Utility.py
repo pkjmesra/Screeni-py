@@ -97,8 +97,8 @@ class tools:
 
     def tableToImage(table, filename,label):
         warnings.filterwarnings('ignore', category=DeprecationWarning)
-        artfont = ImageFont.truetype("courbd.ttf", 15)
-        font = ImageFont.truetype("courbd.ttf", 20)
+        artfont = ImageFont.truetype("courbd.ttf", 30)
+        font = ImageFont.truetype("courbd.ttf", 40)
         arttext_width, arttext_height = artfont.getsize_multiline(artText)
         label_width, label_height = font.getsize_multiline(label)
         text_width, text_height = font.getsize_multiline(table)
