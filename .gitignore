@@ -11,3 +11,5 @@ __pycache__/
 Help
 *.h5
 *.ini
+*.env
+*.dev

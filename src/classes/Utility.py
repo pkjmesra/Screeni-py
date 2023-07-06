@@ -19,6 +19,8 @@ import joblib
 from classes import Imports
 if Imports['keras']:
     import keras
+import warnings
+from PIL import Image, ImageDraw, ImageFont
 import pandas as pd
 from alive_progress import alive_bar
 from tabulate import tabulate
@@ -92,6 +94,16 @@ class tools:
             print(colorText.BOLD + colorText.FAIL +
                   '[+] Failed to load recently screened result table from disk! Skipping..' + colorText.END)
 
+    def tableToImage(table, filename):
+        warnings.filterwarnings('ignore', category=DeprecationWarning)
+        font = ImageFont.truetype("courbd.ttf", 15)
+        text_width, text_height = font.getsize_multiline(table)
+        im = Image.new("RGB", (text_width + 15, text_height + 15), "white")
+        draw = ImageDraw.Draw(im)
+        draw.text((7, 7), table, font=font, fill="black")
+        # im.show()
+        im.save(filename, 'PNG')
+        
     def isTradingTime():
         curr = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
         openTime = curr.replace(hour=9, minute=15)
@@ -205,6 +217,9 @@ class tools:
             df.to_excel(filename)
             print(colorText.BOLD + colorText.GREEN +
                   ("[+] Results saved to %s" % filename) + colorText.END)
+            # tools.tableToImage(df.to_html(), filename + ".png")
+            return filename
+        return None
 
     # Prompt for asking RSI
     def promptRSIValues():
@@ -369,3 +384,4 @@ class tools:
         for i in range(beeps):
             print('\a')
             sleep(delay)
+    

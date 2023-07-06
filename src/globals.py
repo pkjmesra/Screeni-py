@@ -4,6 +4,8 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import sys
+# import dataframe_image as dfi
+# import df2img
 
 import classes.Fetcher as Fetcher
 import classes.ConfigManager as ConfigManager
@@ -22,6 +24,7 @@ import pandas as pd
 from datetime import datetime
 from time import sleep
 from tabulate import tabulate
+from Telegram import send_message, send_photo, send_document
 import multiprocessing
 multiprocessing.freeze_support()
 
@@ -494,7 +497,17 @@ def main(testing=False, testBuild=False, downloadOnly=False):
             },
             inplace=True
         )
-        print(tabulate(screenResults, headers='keys', tablefmt='psql'))
+        Utility.tools.clearScreen()
+        tabulated_results = tabulate(screenResults, headers='keys', tablefmt='psql')
+        markdown_results = tabulate(saveResults, headers='keys', tablefmt='psql')
+        sendMessageToTelegramChannel("<pre>" + saveResults.to_markdown() + "</pre>")
+        pngName = 'screenipy-result_' + \
+                datetime.now().strftime("%d-%m-%y_%H.%M.%S")+".png"
+        # fig = df2img.plot_dataframe(screenResults, fig_size=(500, 140))
+        # df2img.save_dataframe(fig=fig, filename=pngName)
+        # dfi.export(screenResults, pngName)
+        Utility.tools.tableToImage(markdown_results,pngName)
+        sendMessageToTelegramChannel(photo_filePath=pngName)
 
         print(colorText.BOLD + colorText.GREEN +
                   f"[+] Found {len(screenResults)} Stocks." + colorText.END)
@@ -506,13 +519,23 @@ def main(testing=False, testBuild=False, downloadOnly=False):
 
         Utility.tools.setLastScreenedResults(screenResults)
         if not testBuild and not downloadOnly:
-            Utility.tools.promptSaveResults(saveResults)
+            filename = Utility.tools.promptSaveResults(saveResults)
+            if filename is not None:
+                sendMessageToTelegramChannel(document_filePath=filename)
             print(colorText.BOLD + colorText.WARN +
                 "[+] Note: Trend calculation is based on number of days recent to screen as per your configuration." + colorText.END)
             print(colorText.BOLD + colorText.GREEN +
                 "[+] Screening Completed! Press Enter to Continue.." + colorText.END)
             input('')
         newlyListedOnly = False
+
+def sendMessageToTelegramChannel(message=None,photo_filePath=None,document_filePath=None):
+    if message is not None:
+        send_message(message)
+    if photo_filePath is not None:
+        send_photo(photo_filePath)
+    if document_filePath is not None:
+        send_document(document_filePath)
 
 def getProxyServer():
     # Get system wide proxy for networking
