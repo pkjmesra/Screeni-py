@@ -439,18 +439,29 @@ def main(testing=False, testBuild=False, downloadOnly=False):
                 numStocks = len(listStockCodes)
                 print(colorText.END+colorText.BOLD)
                 bar, spinner = Utility.tools.getProgressbarStyle()
+                
                 with alive_bar(numStocks, bar=bar, spinner=spinner) as progressbar:
+                    lstscreen = []
+                    lstsave = []
                     while numStocks:
                         result = results_queue.get()
                         if result is not None:
-                            screenResults = screenResults.append(
-                                result[0], ignore_index=True)
-                            saveResults = saveResults.append(
-                                result[1], ignore_index=True)
+                            lstscreen.append(result[0])
+                            lstsave.append(result[1])
+                            # screenResults = screenResults.append(
+                            #     result[0], ignore_index=True)
+                            # saveResults = saveResults.append(
+                            #     result[1], ignore_index=True)
                         numStocks -= 1
                         progressbar.text(colorText.BOLD + colorText.GREEN +
                                          f'Found {screenResultsCounter.value} Stocks' + colorText.END)
                         progressbar()
+                    # create extension
+                    df_extendedscreen = pd.DataFrame(lstscreen, columns=screenResults.columns)
+                    df_extendedsave = pd.DataFrame(lstsave, columns=saveResults.columns)
+                    screenResults = pd.concat([screenResults, df_extendedscreen])
+                    saveResults = pd.concat([saveResults, df_extendedsave])
+                    # or columns= if identical columns
             except KeyboardInterrupt:
                 try:
                     keyboardInterruptEvent.set()
@@ -499,15 +510,12 @@ def main(testing=False, testBuild=False, downloadOnly=False):
         )
         Utility.tools.clearScreen()
         tabulated_results = tabulate(screenResults, headers='keys', tablefmt='psql')
+        print(tabulated_results)
         markdown_results = tabulate(saveResults, headers='keys', tablefmt='psql')
-        sendMessageToTelegramChannel("<pre>" + saveResults.to_markdown() + "</pre>")
         pngName = 'screenipy-result_' + \
                 datetime.now().strftime("%d-%m-%y_%H.%M.%S")+".png"
-        # fig = df2img.plot_dataframe(screenResults, fig_size=(500, 140))
-        # df2img.save_dataframe(fig=fig, filename=pngName)
-        # dfi.export(screenResults, pngName)
         Utility.tools.tableToImage(markdown_results,pngName)
-        sendMessageToTelegramChannel(photo_filePath=pngName)
+        sendMessageToTelegramChannel(message="'''" + saveResults.to_markdown() + "'''", photo_filePath=pngName)
 
         print(colorText.BOLD + colorText.GREEN +
                   f"[+] Found {len(screenResults)} Stocks." + colorText.END)

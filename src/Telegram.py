@@ -111,7 +111,14 @@ def send_document(documentFilePath,text_html = "", message_id = None):
     document = open(documentFilePath, "rb")
     global chat_idADMIN, botsUrl, Channel_Id, LIST_PEOPLE_IDS_CHAT, TOKEN
     url = f"https://api.telegram.org/bot{TOKEN}/sendDocument"
-    response = requests.post(url, data={'chat_id': Channel_Id}, files={'document': document})
+    if message_id is not None:
+        params = {'chat_id': Channel_Id, 'caption' : text_html,'parse_mode':ParseMode.HTML, 'reply_to_message_id':message_id}
+    else:
+        params = {'chat_id': Channel_Id, 'caption': text_html, 'parse_mode': ParseMode.HTML}
+    files={'document': document}
+    method = "/sendDocument"
+    resp = requests.post(botsUrl + method, params, files=files)
+    return resp
     # content = response.content.decode("utf8")
     # js = json.loads(content)
     # print(js)
