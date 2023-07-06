@@ -136,24 +136,16 @@ def initScannerExecution():
         elif int(key) == 0:
             menuText = menuText + '\n\n     ' + key + ' > '+ level0MenuDict[key]
         else:
+            spaces = '     ' if int(key) <= 9 else '    '
             if tabLevel == 0:
-                menuText = menuText + '\n' + key + ' > '+ level0MenuDict[key]
+                menuText = menuText + '\n' + spaces + key + ' > '+ level0MenuDict[key]
             elif tabLevel <= 2:
-                menuText = menuText + '\t\t' + key + ' > '+ level0MenuDict[key]
+                menuText = menuText + '\t\t\t' + key + ' > '+ level0MenuDict[key]
             tabLevel = tabLevel + 1
+            if tabLevel >= 3:
+                tabLevel = 0
 
-
-    print(colorText.BOLD + '''
-     W > Screen stocks from my own Watchlist
-     N > Nifty Prediction using Artifical Intelligence (Use for Gap-Up/Gap-Down/BTST/STBT)
-     E > Live Index Scan : 5 EMA for Intraday
-
-     0 > Screen stocks by the stock names (NSE Stock Code)
-     1 > Nifty 50               2 > Nifty Next 50           3 > Nifty 100
-     4 > Nifty 200              5 > Nifty 500               6 > Nifty Smallcap 50
-     7 > Nifty Smallcap 100     8 > Nifty Smallcap 250      9 > Nifty Midcap 50
-    10 > Nifty Midcap 100      11 > Nifty Midcap 150       13 > Newly Listed (IPOs in last 2 Year)
-    14 > F&O Stocks Only 
+    print(colorText.BOLD + menutext + '''
 
      M > Back to the Top/Main menu
 
