@@ -122,6 +122,16 @@ class tools:
         closeTime = curr.replace(hour=15, minute=30)
         return ((openTime <= curr <= closeTime) and (0 <= curr.weekday() <= 4))
 
+    def secondsAfterCloseTime():
+        curr = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
+        closeTime = curr.replace(hour=15, minute=30)
+        return (curr - closeTime).total_seconds()
+
+    def secondsBeforeOpenTime():
+        curr = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
+        openTime = curr.replace(hour=9, minute=15)
+        return (curr - openTime).total_seconds()
+    
     def saveStockData(stockDict, configManager, loadCount):
         curr = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
         openTime = curr.replace(hour=9, minute=15)
