@@ -13,6 +13,7 @@ import classes.ConfigManager as ConfigManager
 import classes.Utility as Utility
 from classes.ColorText import colorText
 from globals import main, getProxyServer
+from time import sleep
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -21,7 +22,9 @@ argParser = argparse.ArgumentParser()
 argParser.add_argument('-t', '--testbuild', action='store_true', help='Run in test-build mode', required=False)
 argParser.add_argument('-p', '--prodbuild', action='store_true', help='Run in production-build mode', required=False)
 argParser.add_argument('-d', '--download', action='store_true', help='Only Download Stock data in .pkl file', required=False)
-argParser.add_argument('-o', '--options', action='store_true', help='Pass selected options in the <MainMenu>:<SubMenu>:<SubMenu>... format. For example, 12:6:3', required=False)
+argParser.add_argument('-o', '--options', help='Pass selected options in the <MainMenu>:<SubMenu>:<SubMenu>... format. For example, 12:6:3', required=False)
+argParser.add_argument('-a', '--answerdefault', help='Pass answer to default yestions. Example Y, N', required=False)
+argParser.add_argument('-c', '--croninterval', help='Pass interval in seconds to wait before the program is run again with same parameters', required=False)
 argParser.add_argument('-v', action='store_true')        # Dummy Arg for pytest -v
 args = argParser.parse_args()
 
@@ -36,14 +39,16 @@ if __name__ == "__main__":
         configManager.setConfig(ConfigManager.parser, default=True, showFileCreatedText=False)
     if args.testbuild:
         print(colorText.BOLD + colorText.FAIL +"[+] Started in TestBuild mode!" + colorText.END)
-        main(testBuild=True, prodbuild=args.prodbuild)
+        main(testBuild=True, prodbuild=args.prodbuild, startupoptions=args.options, defaultConsoleAnswer=args.answerdefault)
     elif args.download:
         print(colorText.BOLD + colorText.FAIL +"[+] Download ONLY mode! Stocks will not be screened!" + colorText.END)
-        main(downloadOnly=True, prodbuild=args.prodbuild)
+        main(downloadOnly=True, prodbuild=args.prodbuild, startupoptions=args.options, defaultConsoleAnswer=args.answerdefault)
     else:
         try:
             while True:
-                main()
+                main(prodbuild=args.prodbuild, startupoptions=args.options, defaultConsoleAnswer=args.answerdefault)
+                if args.croninterval is not None and str(args.croninterval).isnumeric():
+                    sleep(int(args.croninterval))
         except Exception as e:
             raise e
             # if isDevVersion == OTAUpdater.developmentVersion:

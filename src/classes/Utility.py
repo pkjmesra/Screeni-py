@@ -211,10 +211,13 @@ class tools:
                       "[+] Cache unavailable on Screenipy server, Continuing.." + colorText.END)
 
     # Save screened results to excel
-    def promptSaveResults(df):
+    def promptSaveResults(df, defaultAnswer=None):
         try:
-            response = str(input(colorText.BOLD + colorText.WARN +
-                                 '[>] Do you want to save the results in excel file? [Y/N]: ')).upper()
+            if defaultAnswer is None:
+                response = str(input(colorText.BOLD + colorText.WARN +
+                                    '[>] Do you want to save the results in excel file? [Y/N]: ')).upper()
+            else:
+                response = defaultAnswer
         except ValueError:
             response = 'Y'
         if response != 'N':

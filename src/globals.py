@@ -36,6 +36,7 @@ np.seterr(divide='ignore', invalid='ignore')
 
 # Global Variabls
 menuChoiceHierarchy = ''
+defaultAnswer = None
 screenCounter = None
 screenResultsCounter = None
 stockDict = None
@@ -100,30 +101,34 @@ level2MenuDict = {'0': 'Full Screening (Shows Technical Parameters without any c
                   }
 selectedChoice = {'0':'', '1':'','2':''}
 
-def initExecution():
+def initExecution(menuOption=None):
     Utility.tools.clearScreen()
-    print(colorText.BOLD + colorText.WARN +
-          '[+] Select a menu option:' + colorText.END)
-    toggleText = 'T > Toggle between long-term (Default)' + colorText.WARN + ' [Current]'+ colorText.END + ' and Intraday user configuration\n' if not configManager.isIntradayConfig() else 'T > Toggle between long-term (Default) and Intraday' + colorText.WARN + ' [Current]' +  colorText.END + ' user configuration'
-    menuText = ''
-    for key in level0MenuDict:
-        menuText = menuText + '\n     ' + key + ' > '+ level0MenuDict[key]
-    print(colorText.BOLD + menuText + '''
+    if menuOption == None:
+        print(colorText.BOLD + colorText.WARN +
+            '[+] Select a menu option:' + colorText.END)
+        toggleText = 'T > Toggle between long-term (Default)' + colorText.WARN + ' [Current]'+ colorText.END + ' and Intraday user configuration\n' if not configManager.isIntradayConfig() else 'T > Toggle between long-term (Default) and Intraday' + colorText.WARN + ' [Current]' +  colorText.END + ' user configuration'
+        menuText = ''
+        for key in level0MenuDict:
+            menuText = menuText + '\n     ' + key + ' > '+ level0MenuDict[key]
+        print(colorText.BOLD + menuText + '''
 
-     ''' + toggleText + '''
-     E > Edit user configuration
-     Y > View your user configuration
+        ''' + toggleText + '''
+        E > Edit user configuration
+        Y > View your user configuration
 
-     U > Check for software update
-     H > Help / About Developer
-     Z > Exit (Ctrl + C)
+        U > Check for software update
+        H > Help / About Developer
+        Z > Exit (Ctrl + C)
 
-    Enter your choice >  (default is ''' + colorText.WARN + 'X > Scanners) ''' + colorText.END
-          )
+        Enter your choice >  (default is ''' + colorText.WARN + 'X > Scanners) ''' + colorText.END
+            )
+    else:
+        print('initExecution:menuOption:' + menuOption)
     try:
-        menuOption = input(
-            colorText.BOLD + colorText.FAIL + '[+] Select option: ')
-        print(colorText.END, end='')
+        if menuOption == None:
+            menuOption = input(
+                colorText.BOLD + colorText.FAIL + '[+] Select option: ')
+            print(colorText.END, end='')
         if menuOption == '':
             menuOption = 'X'
         if not menuOption.isnumeric():
@@ -157,40 +162,42 @@ def toggleUserConfig():
     sleep(3)
 
 # Manage Execution flow
-def initScannerExecution():
+def initScannerExecution(tickerOption=None, executeOption=None):
     global newlyListedOnly
     Utility.tools.clearScreen()
-    print(colorText.BOLD + colorText.FAIL + 'You chose: ' + level0MenuDict[selectedChoice['0']] + ' > ' + colorText.END)
-    print(colorText.BOLD + colorText.WARN +
-          '[+] Select an Index for Screening:' + colorText.END)
-    menuText = ''
-    tabLevel = 0
-    for key in level1MenuDict:
-        if not key.isnumeric():
-            menuText = menuText + '\n     ' + key + ' > '+ level1MenuDict[key]
-        elif int(key) == 0:
-            menuText = menuText + '\n\n     ' + key + ' > '+ level1MenuDict[key]
-        else:
-            spaces = '     ' if int(key) <= 9 else '    '
-            if tabLevel == 0:
-                menuText = menuText + '\n' + spaces + key + ' > '+ level1MenuDict[key]
-            elif tabLevel <= 2:
-                menuText = menuText + '\t' + key + ' > '+ level1MenuDict[key]
-            tabLevel = tabLevel + 1
-            if tabLevel >= 3:
-                tabLevel = 0
+    print(colorText.BOLD + colorText.FAIL + 'You chose: ' + level0MenuDict[selectedChoice['0']].strip() + ' > ' + colorText.END)
+    if tickerOption is None:
+        print(colorText.BOLD + colorText.WARN +
+            '[+] Select an Index for Screening:' + colorText.END)
+        menuText = ''
+        tabLevel = 0
+        for key in level1MenuDict:
+            if not key.isnumeric():
+                menuText = menuText + '\n     ' + key + ' > '+ level1MenuDict[key]
+            elif int(key) == 0:
+                menuText = menuText + '\n\n     ' + key + ' > '+ level1MenuDict[key]
+            else:
+                spaces = '     ' if int(key) <= 9 else '    '
+                if tabLevel == 0:
+                    menuText = menuText + '\n' + spaces + key + ' > '+ level1MenuDict[key]
+                elif tabLevel <= 2:
+                    menuText = menuText + '\t' + key + ' > '+ level1MenuDict[key]
+                tabLevel = tabLevel + 1
+                if tabLevel >= 3:
+                    tabLevel = 0
 
-    print(colorText.BOLD + menuText + '''
+        print(colorText.BOLD + menuText + '''
 
-     M > Back to the Top/Main menu
-     Z > Exit
+        M > Back to the Top/Main menu
+        Z > Exit
 
-    Enter > ''' + colorText.WARN + 'All Stocks (default) ''' + colorText.END
-          )
+        Enter > ''' + colorText.WARN + 'All Stocks (default) ''' + colorText.END
+            )
     try:
-        tickerOption = input(
-            colorText.BOLD + colorText.FAIL + '[+] Select option: ')
-        print(colorText.END, end='')
+        if tickerOption is None:
+            tickerOption = input(
+                colorText.BOLD + colorText.FAIL + '[+] Select option: ')
+            print(colorText.END, end='')
         if tickerOption == '':
             tickerOption = 12
         # elif tickerOption == 'W' or tickerOption == 'w' or tickerOption == 'N' or tickerOption == 'n' or tickerOption == 'E' or tickerOption == 'e':
@@ -214,37 +221,38 @@ def initScannerExecution():
         sleep(2)
         Utility.tools.clearScreen()
         return initScannerExecution()
-
-    if tickerOption and tickerOption != 'W':
-        Utility.tools.clearScreen()
-        print(colorText.BOLD + colorText.FAIL + 'You chose: ' + level0MenuDict[selectedChoice['0']] + ' > ' + level1MenuDict[selectedChoice['1']] + colorText.END)
-        print(colorText.BOLD + colorText.WARN +
-            '[+] Select a Criterion for Stock Screening: ' + colorText.END)
-        menuText = ''
-        tabLevel = 0
-        for key in level2MenuDict:
-            if int(key) == 0 or int(key) == 42:
-                spaces = '     ' if int(key) == 0 else '\n    '
-                menuText = menuText + '\n' + spaces + key + ' > '+ level2MenuDict[key]
-            elif int(key) <= 26:
-                spaces = '     ' if int(key) <= 9 else '    '
-                if tabLevel == 0:
+    if executeOption is None:
+        if tickerOption and tickerOption != 'W':
+            Utility.tools.clearScreen()
+            print(colorText.BOLD + colorText.FAIL + 'You chose: ' + level0MenuDict[selectedChoice['0']].strip() + ' > ' + level1MenuDict[selectedChoice['1']].strip() + colorText.END)
+            print(colorText.BOLD + colorText.WARN +
+                '[+] Select a Criterion for Stock Screening: ' + colorText.END)
+            menuText = ''
+            tabLevel = 0
+            for key in level2MenuDict:
+                if int(key) == 0 or int(key) == 42:
+                    spaces = '     ' if int(key) == 0 else '\n    '
                     menuText = menuText + '\n' + spaces + key + ' > '+ level2MenuDict[key]
-                elif tabLevel == 1:
-                    menuText = menuText + spaces + key + ' > '+ level2MenuDict[key]
-                tabLevel = tabLevel + 1
-                if tabLevel >= 2:
-                    tabLevel = 0
-        print(colorText.BOLD + menuText + '''
+                elif int(key) <= 26:
+                    spaces = '     ' if int(key) <= 9 else '    '
+                    if tabLevel == 0:
+                        menuText = menuText + '\n' + spaces + key + ' > '+ level2MenuDict[key]
+                    elif tabLevel == 1:
+                        menuText = menuText + spaces + key + ' > '+ level2MenuDict[key]
+                    tabLevel = tabLevel + 1
+                    if tabLevel >= 2:
+                        tabLevel = 0
+            print(colorText.BOLD + menuText + '''
 
-    M > Back to the Top/Main menu
-    Z > Exit''' + colorText.END
-            )
+        M > Back to the Top/Main menu
+        Z > Exit''' + colorText.END
+                )
     try:
         if tickerOption and tickerOption != 'W':
-            executeOption = input(
-                colorText.BOLD + colorText.FAIL + '[+] Select option: ')
-            print(colorText.END, end='')
+            if executeOption is None:
+                executeOption = input(
+                    colorText.BOLD + colorText.FAIL + '[+] Select option: ')
+                print(colorText.END, end='')
             if executeOption == '':
                 executeOption = 0
             if not executeOption.isnumeric():
@@ -267,9 +275,10 @@ def initScannerExecution():
     return tickerOption, executeOption
 
 # Main function
-def main(testing=False, testBuild=False, downloadOnly=False, prodbuild=False):
-    global productionbuild,menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly
+def main(testing=False, testBuild=False, downloadOnly=False, prodbuild=False, startupoptions=None, defaultConsoleAnswer=None):
+    global defaultAnswer, productionbuild,menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly
     productionbuild = prodbuild
+    defaultAnswer = defaultConsoleAnswer
     screenCounter = multiprocessing.Value('i', 1)
     screenResultsCounter = multiprocessing.Value('i', 0)
     keyboardInterruptEvent = multiprocessing.Manager().Event()
@@ -297,8 +306,15 @@ def main(testing=False, testBuild=False, downloadOnly=False, prodbuild=False):
         tickerOption, executeOption = 12, 2
     else:
         executeOption = 2
+        menuOption = 'X'
+        tickerOption = None
         try:
-            menuOption = initExecution()
+            if startupoptions is not None:
+                options = startupoptions.split(':')
+                menuOption = options[0] if len(options) >= 1 else None
+                tickerOption = options[1] if len(options) >= 2 else None
+                executeOption = options[2] if len(options) >= 3 else None
+            menuOption = initExecution(menuOption=menuOption)
             if menuOption == 'H':
                 Utility.tools.showDevInfo()
                 main()
@@ -316,7 +332,7 @@ def main(testing=False, testBuild=False, downloadOnly=False, prodbuild=False):
                 main()
                 return
             elif menuOption == 'X':
-                tickerOption, executeOption = initScannerExecution()
+                tickerOption, executeOption = initScannerExecution(tickerOption=tickerOption, executeOption=executeOption)
             elif menuOption == 'Y':
                 configManager.showConfigFile()
                 main()
@@ -450,7 +466,7 @@ def main(testing=False, testBuild=False, downloadOnly=False, prodbuild=False):
                     input('\nPress any key to Continue...\n')
                     return
             else:
-                menuChoiceHierarchy = level0MenuDict[selectedChoice['0']] + ' > ' + level1MenuDict[selectedChoice['1']] + ' > ' + level2MenuDict[selectedChoice['2']]
+                menuChoiceHierarchy = level0MenuDict[selectedChoice['0']].strip() + ' > ' + level1MenuDict[selectedChoice['1']].strip() + ' > ' + level2MenuDict[selectedChoice['2']].strip()
                 print(colorText.BOLD + colorText.FAIL + 'You chose: ' + menuChoiceHierarchy + colorText.END)
                 listStockCodes = fetcher.fetchStockCodes(tickerOption, proxyServer=proxyServer)
         except urllib.error.URLError:
@@ -582,7 +598,10 @@ def main(testing=False, testBuild=False, downloadOnly=False, prodbuild=False):
                 datetime.now().strftime("%d-%m-%y_%H.%M.%S")+".png"
         Utility.tools.tableToImage(markdown_results,pngName,menuChoiceHierarchy)
         sendMessageToTelegramChannel(message="'''" + saveResults.to_markdown() + "'''", photo_filePath=pngName, caption=menuChoiceHierarchy)
-
+        try:
+            os.remove(pngName)
+        except:
+            pass
         print(colorText.BOLD + colorText.GREEN +
                   f"[+] Found {len(screenResults)} Stocks." + colorText.END)
         if configManager.cacheEnabled and not Utility.tools.isTradingTime() and not testing:
@@ -593,14 +612,19 @@ def main(testing=False, testBuild=False, downloadOnly=False, prodbuild=False):
 
         Utility.tools.setLastScreenedResults(screenResults)
         if not testBuild and not downloadOnly:
-            filename = Utility.tools.promptSaveResults(saveResults)
+            filename = Utility.tools.promptSaveResults(saveResults, defaultAnswer = defaultAnswer)
             if filename is not None:
                 sendMessageToTelegramChannel(document_filePath=filename, caption=menuChoiceHierarchy)
             print(colorText.BOLD + colorText.WARN +
                 "[+] Note: Trend calculation is based on number of days recent to screen as per your configuration." + colorText.END)
             print(colorText.BOLD + colorText.GREEN +
                 "[+] Screening Completed! Press Enter to Continue.." + colorText.END)
-            input('')
+            if defaultAnswer is not None and defaultAnswer.upper() != 'Y':
+                input('')
+        try:
+            os.remove(filename)
+        except:
+            pass
         newlyListedOnly = False
 
 def sendMessageToTelegramChannel(message=None,photo_filePath=None,document_filePath=None, caption=None):
