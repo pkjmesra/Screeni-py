@@ -132,15 +132,15 @@ def initScannerExecution():
     tabLevel = 0
     for key in level1MenuDict:
         if not key.isnumeric():
-            menuText = menuText + '\n     ' + key + ' > '+ level0MenuDict[key]
+            menuText = menuText + '\n     ' + key + ' > '+ level1MenuDict[key]
         elif int(key) == 0:
-            menuText = menuText + '\n\n     ' + key + ' > '+ level0MenuDict[key]
+            menuText = menuText + '\n\n     ' + key + ' > '+ level1MenuDict[key]
         else:
             spaces = '     ' if int(key) <= 9 else '    '
             if tabLevel == 0:
-                menuText = menuText + '\n' + spaces + key + ' > '+ level0MenuDict[key]
+                menuText = menuText + '\n' + spaces + key + ' > '+ level1MenuDict[key]
             elif tabLevel <= 2:
-                menuText = menuText + '\t\t\t' + key + ' > '+ level0MenuDict[key]
+                menuText = menuText + '\t\t\t' + key + ' > '+ level1MenuDict[key]
             tabLevel = tabLevel + 1
             if tabLevel >= 3:
                 tabLevel = 0
