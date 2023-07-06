@@ -35,6 +35,7 @@ TEST_STKCODE = "SBIN"
 np.seterr(divide='ignore', invalid='ignore')
 
 # Global Variabls
+menuChoiceHierarchy = ''
 screenCounter = None
 screenResultsCounter = None
 stockDict = None
@@ -53,19 +54,50 @@ level1MenuDict = {'W': 'Screen stocks from my own Watchlist',
                   'N': 'Nifty Prediction using Artifical Intelligence (Use for Gap-Up/Gap-Down/BTST/STBT)',
                   'E': 'Live Index Scan : 5 EMA for Intraday',
                   '0': 'Screen stocks by the stock names (NSE Stock Code)',
-                  '1': 'Nifty 50',
-                  '2': 'Nifty Next 50',
-                  '3': 'Nifty 100',
-                  '4': 'Nifty 200',
-                  '5': 'Nifty 500',
-                  '6': 'Nifty Smallcap 50',
+                  '1': 'Nifty 50          ',
+                  '2': 'Nifty Next 50     ',
+                  '3': 'Nifty 100         ',
+                  '4': 'Nifty 200         ',
+                  '5': 'Nifty 500         ',
+                  '6': 'Nifty Smallcap 50 ',
                   '7': 'Nifty Smallcap 100',
                   '8': 'Nifty Smallcap 250',
-                  '9': 'Nifty Midcap 50',
+                  '9': 'Nifty Midcap 50   ',
                   '10': 'Nifty Midcap 100',
                   '11': 'Nifty Midcap 150',
-                  '13': 'Newly Listed (IPOs in last 2 Year)',
+                  '12': 'Nifty (All Stocks)',
+                  '13': 'Newly Listed (IPOs in last 2 Year)        ',
                   '14': 'F&O Stocks Only'}
+level2MenuDict = {'0': 'Full Screening (Shows Technical Parameters without any criterion)',
+                  '1': 'Probable Breakouts              ',
+                  '2': 'Recent Breakouts & Volumes',
+                  '3': 'Consolidating stocks            ',
+                  '4': 'Lowest Volume in last \'N\'-days (Early Breakout Detection)',
+                  '5': 'RSI screening                   ',
+                  '6': 'Reversal Signals',
+                  '7': 'Stocks making Chart Patterns    ',
+                  '8': 'CCI outside of the given range',
+                  '9': 'Volume gainers                  ',
+                  '10': 'Closing at least 2% up since last 3 days',
+                  '11': 'Short term bullish stocks       ',
+                  '12': '15 Minute Price & Volume breakout',
+                  '13': 'Bullish RSI & MACD Intraday     ',
+                  '14': 'NR4 Daily Today',
+                  '15': '52 week low breakout            ',
+                  '16': '10 days low breakout',
+                  '17': '52 week high breakout           ',
+                  '18': 'Bullish Aroon Crossover',
+                  '19': 'MACD Historgram x below 0       ',
+                  '20': 'RSI entering bullish territory',
+                  '21': 'Bearish CCI crossover           ',
+                  '22': 'RSI crosses above 30 and price higher than psar',
+                  '23': 'Intraday Momentum Build-up      ',
+                  '24': 'Extremely bullish daily close',
+                  '25': 'Rising RSI                      ',
+                  '26': 'Dividend Yield',
+                  '42': 'Show Last Screened Results'
+                  }
+selectedChoice = {'0':'', '1':'','2':''}
 
 def initExecution():
     Utility.tools.clearScreen()
@@ -101,6 +133,7 @@ def initExecution():
                 sys.exit(0)
             elif menuOption in 'BHUTSEXY':
                 Utility.tools.clearScreen()
+                selectedChoice['0'] = menuOption
                 return menuOption
     except KeyboardInterrupt:
         raise KeyboardInterrupt
@@ -126,6 +159,7 @@ def toggleUserConfig():
 def initScannerExecution():
     global newlyListedOnly
     Utility.tools.clearScreen()
+    print(colorText.BOLD + colorText.FAIL + 'You chose: ' + level0MenuDict[selectedChoice['0']] + ' > ' + colorText.END)
     print(colorText.BOLD + colorText.WARN +
           '[+] Select an Index for Screening:' + colorText.END)
     menuText = ''
@@ -140,14 +174,15 @@ def initScannerExecution():
             if tabLevel == 0:
                 menuText = menuText + '\n' + spaces + key + ' > '+ level1MenuDict[key]
             elif tabLevel <= 2:
-                menuText = menuText + '\t\t\t' + key + ' > '+ level1MenuDict[key]
+                menuText = menuText + '\t' + key + ' > '+ level1MenuDict[key]
             tabLevel = tabLevel + 1
             if tabLevel >= 3:
                 tabLevel = 0
 
-    print(colorText.BOLD + menutext + '''
+    print(colorText.BOLD + menuText + '''
 
      M > Back to the Top/Main menu
+     Z > Exit
 
     Enter > ''' + colorText.WARN + 'All Stocks (default) ''' + colorText.END
           )
@@ -160,7 +195,7 @@ def initScannerExecution():
         # elif tickerOption == 'W' or tickerOption == 'w' or tickerOption == 'N' or tickerOption == 'n' or tickerOption == 'E' or tickerOption == 'e':
         elif not tickerOption.isnumeric():
             tickerOption = tickerOption.upper()
-            if tickerOption in 'MEN':
+            if tickerOption in 'MENZ':
                 return tickerOption, 0
         else:
             tickerOption = int(tickerOption)
@@ -169,6 +204,7 @@ def initScannerExecution():
             elif tickerOption == 13:
                 newlyListedOnly = True
                 tickerOption = 12
+        selectedChoice['1'] = str(tickerOption)
     except KeyboardInterrupt:
         raise KeyboardInterrupt
     except Exception as e:
@@ -180,25 +216,25 @@ def initScannerExecution():
 
     if tickerOption and tickerOption != 'W':
         Utility.tools.clearScreen()
+        print(colorText.BOLD + colorText.FAIL + 'You chose: ' + level0MenuDict[selectedChoice['0']] + ' > ' + level1MenuDict[selectedChoice['1']] + colorText.END)
         print(colorText.BOLD + colorText.WARN +
             '[+] Select a Criterion for Stock Screening: ' + colorText.END)
-        print(colorText.BOLD + '''
-    0 > Full Screening (Shows Technical Parameters without any criterion)
-    1 > Probable Breakouts              2 > Recent Breakouts & Volumes
-    3 > Consolidating stocks            4 > Lowest Volume in last 'N'-days (Early Breakout Detection)
-    5 > RSI screening                   6 > Reversal Signals
-    7 > Stocks making Chart Patterns    8 > CCI outside of the given range
-    9 > Volume gainers                 10 > Closing at least 2% up since last 3 days
-   11 > Short term bullish stocks      12 > 15 Minute Price & Volume breakout
-   13 > Bullish RSI & MACD Intraday    14 > NR4 Daily Today
-   15 > 52 week low breakout           16 > 10 days low breakout
-   17 > 52 week high breakout          18 > Bullish Aroon Crossover
-   19 > MACD Historgram x below 0      20 > RSI entering bullish territory
-   21 > Bearish CCI crossover          22 > RSI crosses above 30 and price higher than psar
-   23 > Intraday Momentum Build-up     24 > Extremely bullish daily close
-   25 > Rising RSI                     26 > Dividend Yield
-
-   42 > Show Last Screened Results
+        menuText = ''
+        tabLevel = 0
+        for key in level2MenuDict:
+            if int(key) == 0 or int(key) == 42:
+                spaces = '     ' if int(key) == 0 else '\n    '
+                menuText = menuText + '\n' + spaces + key + ' > '+ level2MenuDict[key]
+            elif int(key) <= 26:
+                spaces = '     ' if int(key) <= 9 else '    '
+                if tabLevel == 0:
+                    menuText = menuText + '\n' + spaces + key + ' > '+ level2MenuDict[key]
+                elif tabLevel == 1:
+                    menuText = menuText + spaces + key + ' > '+ level2MenuDict[key]
+                tabLevel = tabLevel + 1
+                if tabLevel >= 2:
+                    tabLevel = 0
+        print(colorText.BOLD + menuText + '''
 
     M > Back to the Top/Main menu
     Z > Exit''' + colorText.END
@@ -218,6 +254,7 @@ def initScannerExecution():
                     raise ValueError
         else:
             executeOption = 0
+        selectedChoice['2'] = str(executeOption)
     except KeyboardInterrupt:
         raise KeyboardInterrupt
     except Exception as e:
@@ -230,7 +267,7 @@ def initScannerExecution():
 
 # Main function
 def main(testing=False, testBuild=False, downloadOnly=False):
-    global screenCounter, screenResultsCounter, stockDict, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly
+    global menuChoiceHierarchy, screenCounter, screenResultsCounter, stockDict, loadedStockData, keyboardInterruptEvent, loadCount, maLength, newlyListedOnly
     screenCounter = multiprocessing.Value('i', 1)
     screenResultsCounter = multiprocessing.Value('i', 0)
     keyboardInterruptEvent = multiprocessing.Manager().Event()
@@ -291,6 +328,15 @@ def main(testing=False, testBuild=False, downloadOnly=False):
             input(colorText.BOLD + colorText.FAIL +
                 "[+] Press any key to Exit!" + colorText.END)
             sys.exit(0)
+
+    if tickerOption == 'M' or executeOption == 'M':
+        main()
+        return
+    if executeOption == 'Z':
+        input(colorText.BOLD + colorText.FAIL +
+              "[+] Press any key to Exit!" + colorText.END)
+        sys.exit(0)
+    
     volumeRatio = configManager.volumeRatio
     if executeOption == 4:
         try:
@@ -343,13 +389,6 @@ def main(testing=False, testBuild=False, downloadOnly=False):
         Utility.tools.getLastScreenedResults()
         main()
         return
-    if tickerOption == 'M' or executeOption == 'M':
-        main()
-        return
-    if executeOption == 'Z':
-        input(colorText.BOLD + colorText.FAIL +
-              "[+] Press any key to Exit!" + colorText.END)
-        sys.exit(0)
     if executeOption >= 15 and executeOption <= 39:
         print(colorText.BOLD + colorText.FAIL + '\n[+] Error: Option 15 to 39 Not implemented yet! Press any key to continue.' + colorText.END) 
         input('')
@@ -409,6 +448,8 @@ def main(testing=False, testBuild=False, downloadOnly=False):
                     input('\nPress any key to Continue...\n')
                     return
             else:
+                menuChoiceHierarchy = level0MenuDict[selectedChoice['0']] + ' > ' + level1MenuDict[selectedChoice['1']] + ' > ' + level2MenuDict[selectedChoice['2']]
+                print(colorText.BOLD + colorText.FAIL + 'You chose: ' + menuChoiceHierarchy + colorText.END)
                 listStockCodes = fetcher.fetchStockCodes(tickerOption, proxyServer=proxyServer)
         except urllib.error.URLError:
             print(colorText.BOLD + colorText.FAIL +
@@ -473,10 +514,6 @@ def main(testing=False, testBuild=False, downloadOnly=False):
                         if result is not None:
                             lstscreen.append(result[0])
                             lstsave.append(result[1])
-                            # screenResults = screenResults.append(
-                            #     result[0], ignore_index=True)
-                            # saveResults = saveResults.append(
-                            #     result[1], ignore_index=True)
                         numStocks -= 1
                         progressbar.text(colorText.BOLD + colorText.GREEN +
                                          f'Found {screenResultsCounter.value} Stocks' + colorText.END)
@@ -534,13 +571,14 @@ def main(testing=False, testBuild=False, downloadOnly=False):
             inplace=True
         )
         Utility.tools.clearScreen()
+        print(colorText.BOLD + colorText.FAIL + 'You chose: ' + menuChoiceHierarchy + colorText.END)
         tabulated_results = tabulate(screenResults, headers='keys', tablefmt='psql')
         print(tabulated_results)
         markdown_results = tabulate(saveResults, headers='keys', tablefmt='psql')
-        pngName = 'screenipy-result_' + \
+        pngName = 'PKScreener-result_' + \
                 datetime.now().strftime("%d-%m-%y_%H.%M.%S")+".png"
-        Utility.tools.tableToImage(markdown_results,pngName)
-        sendMessageToTelegramChannel(message="'''" + saveResults.to_markdown() + "'''", photo_filePath=pngName)
+        Utility.tools.tableToImage(markdown_results,pngName,menuChoiceHierarchy)
+        sendMessageToTelegramChannel(message="'''" + saveResults.to_markdown() + "'''", photo_filePath=pngName, caption=menuChoiceHierarchy)
 
         print(colorText.BOLD + colorText.GREEN +
                   f"[+] Found {len(screenResults)} Stocks." + colorText.END)
@@ -554,7 +592,7 @@ def main(testing=False, testBuild=False, downloadOnly=False):
         if not testBuild and not downloadOnly:
             filename = Utility.tools.promptSaveResults(saveResults)
             if filename is not None:
-                sendMessageToTelegramChannel(document_filePath=filename)
+                sendMessageToTelegramChannel(document_filePath=filename, caption=menuChoiceHierarchy)
             print(colorText.BOLD + colorText.WARN +
                 "[+] Note: Trend calculation is based on number of days recent to screen as per your configuration." + colorText.END)
             print(colorText.BOLD + colorText.GREEN +
@@ -562,13 +600,13 @@ def main(testing=False, testBuild=False, downloadOnly=False):
             input('')
         newlyListedOnly = False
 
-def sendMessageToTelegramChannel(message=None,photo_filePath=None,document_filePath=None):
+def sendMessageToTelegramChannel(message=None,photo_filePath=None,document_filePath=None, caption=None):
     if message is not None:
         send_message(message)
     if photo_filePath is not None:
-        send_photo(photo_filePath)
+        send_photo(photo_filePath, caption)
     if document_filePath is not None:
-        send_document(document_filePath)
+        send_document(document_filePath, caption)
 
 def getProxyServer():
     # Get system wide proxy for networking

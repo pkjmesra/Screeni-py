@@ -95,16 +95,18 @@ class tools:
             print(colorText.BOLD + colorText.FAIL +
                   '[+] Failed to load recently screened result table from disk! Skipping..' + colorText.END)
 
-    def tableToImage(table, filename):
+    def tableToImage(table, filename,label):
         warnings.filterwarnings('ignore', category=DeprecationWarning)
         artfont = ImageFont.truetype("courbd.ttf", 15)
         font = ImageFont.truetype("courbd.ttf", 20)
         arttext_width, arttext_height = artfont.getsize_multiline(artText)
+        label_width, label_height = font.getsize_multiline(label)
         text_width, text_height = font.getsize_multiline(table)
-        im = Image.new("RGB", (text_width + 15, arttext_height + text_height + 15), "black")
+        im = Image.new("RGB", (text_width + 15, arttext_height + text_height + label_height + 15), "black")
         draw = ImageDraw.Draw(im)
         draw.text((7, 7), artText, font=artfont, fill="green")
-        draw.text((7, 8 + arttext_height), table, font=font, fill="white")
+        draw.text((7, 8 + arttext_height), label, font=font, fill="red")
+        draw.text((7, 9 + arttext_height + label_height), table, font=font, fill="white")
         # im.show()
         im.save(filename, 'PNG')
         
@@ -216,12 +218,11 @@ class tools:
         except ValueError:
             response = 'Y'
         if response != 'N':
-            filename = 'screenipy-result_' + \
+            filename = 'PKScreener-result_' + \
                 datetime.datetime.now().strftime("%d-%m-%y_%H.%M.%S")+".xlsx"
             df.to_excel(filename)
             print(colorText.BOLD + colorText.GREEN +
                   ("[+] Results saved to %s" % filename) + colorText.END)
-            # tools.tableToImage(df.to_html(), filename + ".png")
             return filename
         return None
 
