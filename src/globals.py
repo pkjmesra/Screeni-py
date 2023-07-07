@@ -112,15 +112,15 @@ def initExecution(menuOption=None):
             menuText = menuText + '\n     ' + key + ' > '+ level0MenuDict[key]
         print(colorText.BOLD + menuText + '''
 
-        ''' + toggleText + '''
-        E > Edit user configuration
-        Y > View your user configuration
+    ''' + toggleText + '''
+    E > Edit user configuration
+    Y > View your user configuration
 
-        U > Check for software update
-        H > Help / About Developer
-        Z > Exit (Ctrl + C)
+    U > Check for software update
+    H > Help / About Developer
+    Z > Exit (Ctrl + C)
 
-        Enter your choice >  (default is ''' + colorText.WARN + 'X > Scanners) ''' + colorText.END
+    Enter your choice >  (default is ''' + colorText.WARN + 'X > Scanners) ''' + colorText.END
             )
     else:
         print('initExecution:menuOption:' + menuOption)
@@ -188,10 +188,10 @@ def initScannerExecution(tickerOption=None, executeOption=None):
 
         print(colorText.BOLD + menuText + '''
 
-        M > Back to the Top/Main menu
-        Z > Exit
+    M > Back to the Top/Main menu
+    Z > Exit
 
-        Enter > ''' + colorText.WARN + 'All Stocks (default) ''' + colorText.END
+    Enter > ''' + colorText.WARN + 'All Stocks (default) ''' + colorText.END
             )
     try:
         if tickerOption is None:
@@ -306,7 +306,7 @@ def main(testing=False, testBuild=False, downloadOnly=False, prodbuild=False, st
         tickerOption, executeOption = 12, 2
     else:
         executeOption = 2
-        menuOption = 'X'
+        menuOption = None
         tickerOption = None
         try:
             if startupoptions is not None:

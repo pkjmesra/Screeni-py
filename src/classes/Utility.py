@@ -102,38 +102,45 @@ class tools:
         arttext_width, arttext_height = artfont.getsize_multiline(artText)
         label_width, label_height = font.getsize_multiline(label)
         text_width, text_height = font.getsize_multiline(table)
-        im = Image.new("RGB", (text_width + 15, arttext_height + text_height + label_height + 15), "black")
+        im = Image.new("RGB", (text_width + 15, arttext_height + text_height + label_height + 15), "white")
         draw = ImageDraw.Draw(im)
         draw.text((7, 7), artText, font=artfont, fill="green")
         draw.text((7, 8 + arttext_height), label, font=font, fill="red")
-        draw.text((7, 9 + arttext_height + label_height), table, font=font, fill="white")
+        draw.text((7, 9 + arttext_height + label_height), table, font=font, fill="black")
         # im.show()
         im.save(filename, 'PNG')
-        
-    def isTradingTime():
+    
+    def currentDateTime(simulate=False, day=None, hour=None, minute=None):
         curr = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
+        if simulate:
+            return curr.replace(day=day, hour=hour, minute=minute)
+        else:
+            return curr
+
+    def isTradingTime():
+        curr = tools.currentDateTime()
         openTime = curr.replace(hour=9, minute=15)
         closeTime = curr.replace(hour=15, minute=30)
         return ((openTime <= curr <= closeTime) and (0 <= curr.weekday() <= 4))
 
     def isClosingHour():
-        curr = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
+        curr = tools.currentDateTime()
         openTime = curr.replace(hour=15, minute=00)
         closeTime = curr.replace(hour=15, minute=30)
         return ((openTime <= curr <= closeTime) and (0 <= curr.weekday() <= 4))
 
     def secondsAfterCloseTime():
-        curr = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
+        curr = tools.currentDateTime() #(simulate=True,day=7,hour=8,minute=14)
         closeTime = curr.replace(hour=15, minute=30)
         return (curr - closeTime).total_seconds()
 
     def secondsBeforeOpenTime():
-        curr = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
+        curr = tools.currentDateTime() #(simulate=True,day=7,hour=8,minute=14)
         openTime = curr.replace(hour=9, minute=15)
         return (curr - openTime).total_seconds()
 
     def nextRunAtDateTime(bufferSeconds=3600, cronWaitSeconds=300):
-        curr = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
+        curr = tools.currentDateTime() #(simulate=True,day=7,hour=8,minute=14)
         nextRun = curr + datetime.timedelta(seconds=cronWaitSeconds)
         if (0 <= curr.weekday() <= 4):
             daysToAdd = 0
@@ -157,7 +164,7 @@ class tools:
         return nextRun
 
     def saveStockData(stockDict, configManager, loadCount):
-        curr = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
+        curr = tools.currentDateTime()
         openTime = curr.replace(hour=9, minute=15)
         cache_date = datetime.date.today()  # for monday to friday
         weekday = datetime.date.today().weekday()
@@ -185,7 +192,7 @@ class tools:
                   "=> Already Cached." + colorText.END)
 
     def loadStockData(stockDict, configManager, proxyServer=None):
-        curr = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
+        curr = tools.currentDateTime()
         openTime = curr.replace(hour=9, minute=15)
         last_cached_date = datetime.date.today()  # for monday to friday after 3:30
         weekday = datetime.date.today().weekday()
