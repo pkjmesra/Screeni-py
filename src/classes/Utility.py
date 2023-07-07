@@ -131,7 +131,31 @@ class tools:
         curr = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
         openTime = curr.replace(hour=9, minute=15)
         return (curr - openTime).total_seconds()
-    
+
+    def nextRunAtDateTime(bufferSeconds=3600, cronWaitSeconds=300):
+        curr = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
+        nextRun = curr + datetime.timedelta(seconds=cronWaitSeconds)
+        if (0 <= curr.weekday() <= 4):
+            daysToAdd = 0
+        else:
+            daysToAdd = 7 - curr.weekday()
+        if tools.isTradingTime():
+            nextRun = curr + datetime.timedelta(seconds=cronWaitSeconds)
+        else:
+            # Same day after closing time
+            secondsAfterClosingTime = tools.secondsAfterCloseTime()
+            if secondsAfterClosingTime > 0:
+                if secondsAfterClosingTime <= bufferSeconds:
+                    nextRun = curr + datetime.timedelta(days=daysToAdd, seconds=1.5*cronWaitSeconds + bufferSeconds - secondsAfterClosingTime)
+                elif secondsAfterClosingTime > (bufferSeconds+1.5*cronWaitSeconds):
+                    # Same day, upto 11:59:59pm
+                    curr = curr + datetime.timedelta(days=3 if curr.weekday() == 4 else 1)
+                    nextRun = curr.replace(hour=9, minute=15) - datetime.timedelta(days=daysToAdd, seconds=1.5*cronWaitSeconds + bufferSeconds)
+            elif secondsAfterClosingTime < 0:
+                # Next day
+                nextRun = curr.replace(hour=9, minute=15) - datetime.timedelta(days=daysToAdd, seconds=1.5*cronWaitSeconds + bufferSeconds)
+        return nextRun
+
     def saveStockData(stockDict, configManager, loadCount):
         curr = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
         openTime = curr.replace(hour=9, minute=15)

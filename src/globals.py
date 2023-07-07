@@ -165,7 +165,7 @@ def toggleUserConfig():
 def initScannerExecution(tickerOption=None, executeOption=None):
     global newlyListedOnly
     Utility.tools.clearScreen()
-    print(colorText.BOLD + colorText.FAIL + 'You chose: ' + level0MenuDict[selectedChoice['0']].strip() + ' > ' + colorText.END)
+    print(colorText.BOLD + colorText.FAIL + '[+] You chose: ' + level0MenuDict[selectedChoice['0']].strip() + ' > ' + colorText.END)
     if tickerOption is None:
         print(colorText.BOLD + colorText.WARN +
             '[+] Select an Index for Screening:' + colorText.END)
@@ -224,7 +224,7 @@ def initScannerExecution(tickerOption=None, executeOption=None):
     if executeOption is None:
         if tickerOption and tickerOption != 'W':
             Utility.tools.clearScreen()
-            print(colorText.BOLD + colorText.FAIL + 'You chose: ' + level0MenuDict[selectedChoice['0']].strip() + ' > ' + level1MenuDict[selectedChoice['1']].strip() + colorText.END)
+            print(colorText.BOLD + colorText.FAIL + '[+] You chose: ' + level0MenuDict[selectedChoice['0']].strip() + ' > ' + level1MenuDict[selectedChoice['1']].strip() + colorText.END)
             print(colorText.BOLD + colorText.WARN +
                 '[+] Select a Criterion for Stock Screening: ' + colorText.END)
             menuText = ''
@@ -366,6 +366,7 @@ def main(testing=False, testBuild=False, downloadOnly=False, prodbuild=False, st
                   '[+] Error: Non-numeric value entered! Screening aborted.' + colorText.END)
             input('')
             main()
+            return
         print(colorText.END)
     if executeOption == 5:
         minRSI, maxRSI = Utility.tools.promptRSIValues()
@@ -467,7 +468,7 @@ def main(testing=False, testBuild=False, downloadOnly=False, prodbuild=False, st
                     return
             else:
                 menuChoiceHierarchy = level0MenuDict[selectedChoice['0']].strip() + ' > ' + level1MenuDict[selectedChoice['1']].strip() + ' > ' + level2MenuDict[selectedChoice['2']].strip()
-                print(colorText.BOLD + colorText.FAIL + 'You chose: ' + menuChoiceHierarchy + colorText.END)
+                print(colorText.BOLD + colorText.FAIL + '[+] You chose: ' + menuChoiceHierarchy + colorText.END)
                 listStockCodes = fetcher.fetchStockCodes(tickerOption, proxyServer=proxyServer)
         except urllib.error.URLError:
             print(colorText.BOLD + colorText.FAIL +
@@ -590,7 +591,7 @@ def main(testing=False, testBuild=False, downloadOnly=False, prodbuild=False, st
         )
         Utility.tools.clearScreen()
         menuChoiceHierarchy = menuChoiceHierarchy + ' (Data Period: ' + configManager.period + ', Candle Duration: ' + configManager.duration + ')'
-        print(colorText.BOLD + colorText.FAIL + 'You chose: ' + menuChoiceHierarchy + colorText.END)
+        print(colorText.BOLD + colorText.FAIL + '[+] You chose: ' + menuChoiceHierarchy + colorText.END)
         tabulated_results = tabulate(screenResults, headers='keys', tablefmt='psql')
         print(tabulated_results)
         markdown_results = tabulate(saveResults, headers='keys', tablefmt='psql')
@@ -629,11 +630,20 @@ def main(testing=False, testBuild=False, downloadOnly=False, prodbuild=False, st
 
 def sendMessageToTelegramChannel(message=None,photo_filePath=None,document_filePath=None, caption=None):
     if message is not None:
-        send_message(message)
+        try:
+            send_message(message)
+        except:
+            pass
     if photo_filePath is not None:
-        send_photo(photo_filePath, caption)
+        try:
+            send_photo(photo_filePath, caption)
+        except:
+            pass
     if document_filePath is not None:
-        send_document(document_filePath, caption)
+        try:
+            send_document(document_filePath, caption)
+        except:
+            pass
 
 def getProxyServer():
     # Get system wide proxy for networking

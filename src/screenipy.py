@@ -46,12 +46,21 @@ if __name__ == "__main__":
     else:
         try:
             while True:
-                main(prodbuild=args.prodbuild, startupoptions=args.options, defaultConsoleAnswer=args.answerdefault)
+                # main(prodbuild=args.prodbuild, startupoptions=args.options, defaultConsoleAnswer=args.answerdefault)
                 if args.croninterval is not None and str(args.croninterval).isnumeric():
-                    justAfterAnHourOfCloseOrAnHourBeforeOpen = (Utility.tools.secondsAfterCloseTime() <= 3600) or (Utility.tools.secondsAfterCloseTime() >= (3600 + 1.5 * int(args.croninterval)) and Utility.tools.secondsBeforeOpenTime() <= -3600)
-                    while justAfterAnHourOfCloseOrAnHourBeforeOpen:
+                    sleepUntilNextExecution = not Utility.tools.isTradingTime()
+                    while sleepUntilNextExecution:
+                        print(colorText.BOLD + colorText.FAIL + ("SecondsAfterClosingTime[%d] SecondsBeforeMarketOpen [%d]. Next run at [%s]" % (
+                            int(Utility.tools.secondsAfterCloseTime()), int(Utility.tools.secondsBeforeOpenTime()),str(Utility.tools.nextRunAtDateTime(bufferSeconds=3600, cronWaitSeconds=int(args.croninterval))))) + colorText.END)
+                        if (Utility.tools.secondsAfterCloseTime() >= 3600) and (Utility.tools.secondsAfterCloseTime() <= (3600 + 1.5 * int(args.croninterval))):
+                            sleepUntilNextExecution = False
+                        if (Utility.tools.secondsBeforeOpenTime() <= -3600) and (Utility.tools.secondsBeforeOpenTime() >= (-3600 - 1.5 * int(args.croninterval))):
+                            sleepUntilNextExecution = False
                         sleep(int(args.croninterval))
-                    
+                    print(colorText.BOLD + colorText.GREEN +
+                      "=> Going to fetch again!" + colorText.END, end='\r', flush=True)
+                    sleep(5)
+                main(prodbuild=args.prodbuild, startupoptions=args.options, defaultConsoleAnswer=args.answerdefault)
         except Exception as e:
             raise e
             # if isDevVersion == OTAUpdater.developmentVersion:
