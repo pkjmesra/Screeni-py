@@ -48,7 +48,8 @@ if __name__ == "__main__":
             while True:
                 main(prodbuild=args.prodbuild, startupoptions=args.options, defaultConsoleAnswer=args.answerdefault)
                 if args.croninterval is not None and str(args.croninterval).isnumeric():
-                    while Utility.tools.secondsAfterCloseTime() <= 3600 or Utility.tools.secondsBeforeOpenTime() <= -3600:
+                    justAfterAnHourOfCloseOrAnHourBeforeOpen = (Utility.tools.secondsAfterCloseTime() <= 3600) or (Utility.tools.secondsAfterCloseTime() >= (3600 + 1.5 * int(args.croninterval)) and Utility.tools.secondsBeforeOpenTime() <= -3600)
+                    while justAfterAnHourOfCloseOrAnHourBeforeOpen:
                         sleep(int(args.croninterval))
                     
         except Exception as e:
