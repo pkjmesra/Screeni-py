@@ -19,7 +19,7 @@ import platform
 sys.path.append(os.path.abspath('../src'))
 import classes.ConfigManager as ConfigManager
 from classes.Changelog import changelog
-from screenipy import *
+from pkscreener import *
 last_release = 0
 configManager = ConfigManager.tools()
 
@@ -176,10 +176,10 @@ def test_release_readme_urls():
     f = open('../src/release.md', 'r')
     contents = f.read()
     f.close()
-    failUrl = [f"https://github.com/pranjal-joshi/Screeni-py/releases/download/{last_release}/screenipy.bin",
-               f"https://github.com/pranjal-joshi/Screeni-py/releases/download/{last_release}/screenipy.exe"]
-    passUrl = [f"https://github.com/pranjal-joshi/Screeni-py/releases/download/{VERSION}/screenipy.bin",
-               f"https://github.com/pranjal-joshi/Screeni-py/releases/download/{VERSION}/screenipy.exe"]
+    failUrl = [f"https://github.com/pranjal-joshi/Screeni-py/releases/download/{last_release}/pkscreener.bin",
+               f"https://github.com/pranjal-joshi/Screeni-py/releases/download/{last_release}/pkscreener.exe"]
+    passUrl = [f"https://github.com/pranjal-joshi/Screeni-py/releases/download/{VERSION}/pkscreener.bin",
+               f"https://github.com/pranjal-joshi/Screeni-py/releases/download/{VERSION}/pkscreener.exe"]
     for url in failUrl:
         assert not url in contents
     for url in passUrl:

@@ -21,12 +21,12 @@ class OTAUpdater:
     def updateForWindows(url):
         batFile = """@echo off
 color a
-echo [+] Screenipy Software Updater!
+echo [+] pkscreener Software Updater!
 echo [+] Downloading Software Update...
 echo [+] This may take some time as per your Internet Speed, Please Wait...
-curl -o screenipy.exe -L """ + url + """
+curl -o pkscreener.exe -L """ + url + """
 echo [+] Newly downloaded file saved in %cd%
-echo [+] Software Update Completed! Run'screenipy.exe' again as usual to continue..
+echo [+] Software Update Completed! Run'pkscreener.exe' again as usual to continue..
 pause
 del updater.bat & exit
         """
@@ -42,13 +42,13 @@ del updater.bat & exit
 echo ""
 echo "[+] Starting Screeni-py updater, Please Wait..."
 sleep 3
-echo "[+] Screenipy Software Updater!"
+echo "[+] pkscreener Software Updater!"
 echo "[+] Downloading Software Update..."
 echo "[+] This may take some time as per your Internet Speed, Please Wait..."
-wget -q """ + url + """ -O screenipy.bin
+wget -q """ + url + """ -O pkscreener.bin
 echo "[+] Newly downloaded file saved in $(pwd)"
-chmod +x screenipy.bin
-echo "[+] Update Completed! Run 'screenipy.bin' again as usual to continue.."
+chmod +x pkscreener.bin
+echo "[+] Update Completed! Run 'pkscreener.bin' again as usual to continue.."
 rm updater.sh
         """
         f = open("updater.sh",'w')
@@ -63,13 +63,13 @@ rm updater.sh
 echo ""
 echo "[+] Starting Screeni-py updater, Please Wait..."
 sleep 3
-echo "[+] Screenipy Software Updater!"
+echo "[+] pkscreener Software Updater!"
 echo "[+] Downloading Software Update..."
 echo "[+] This may take some time as per your Internet Speed, Please Wait..."
-curl -o screenipy.run -L """ + url + """
+curl -o pkscreener.run -L """ + url + """
 echo "[+] Newly downloaded file saved in $(pwd)"
-chmod +x screenipy.run
-echo "[+] Update Completed! Run 'screenipy.run' again as usual to continue.."
+chmod +x pkscreener.run
+echo "[+] Update Completed! Run 'pkscreener.run' again as usual to continue.."
 rm updater.sh
         """
         f = open("updater.sh",'w')

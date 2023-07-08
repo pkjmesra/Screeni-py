@@ -3,14 +3,14 @@
 # Created             :   24/01/2022
 # Description         :   Workflow for downloading pickled stock data to cloud [Use this when yfinance causing an issue]
 
-name: Screenipy Data - After-Market Data Gen
+name: pkscreener Data - After-Market Data Gen
 on:
   workflow_dispatch:
     inputs:
       name:
         description: 'Run Details'
         required: false
-        default: 'Screenipy - Data Download'
+        default: 'pkscreener - Data Download'
   schedule:
   - cron: '02 10 * * 1-5'
 
@@ -54,7 +54,7 @@ jobs:
       run: |
         rmdir /s /q actions-data-download
         mkdir actions-data-download
-        python src/screenipy.py -d
+        python src/pkscreener.py -d
         copy "stock_data_*.pkl" "actions-data-download"
 
     - name: Push Pickle Data

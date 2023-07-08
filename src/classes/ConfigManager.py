@@ -65,7 +65,7 @@ class tools:
             parser.set('config', 'onlyStageTwoStocks', 'y' if self.stageTwo else 'n')
             parser.set('config', 'useEMA', 'y' if self.useEMA else 'n')
             try:
-                fp = open('screenipy.ini', 'w')
+                fp = open('pkscreener.ini', 'w')
                 parser.write(fp)
                 fp.close()
                 if showFileCreatedText:
@@ -128,7 +128,7 @@ class tools:
             print(colorText.BOLD + colorText.FAIL + "[+] Cached Stock Data Deleted." + colorText.END)
 
             try:
-                fp = open('screenipy.ini', 'w')
+                fp = open('pkscreener.ini', 'w')
                 parser.write(fp)
                 fp.close()
                 print(colorText.BOLD + colorText.GREEN +
@@ -145,7 +145,7 @@ class tools:
 
     # Load user config from file
     def getConfig(self, parser):
-        if len(parser.read('screenipy.ini')):
+        if len(parser.read('pkscreener.ini')):
             try:
                 self.duration = parser.get('config', 'duration')
                 self.period = parser.get('config', 'period')
@@ -162,7 +162,7 @@ class tools:
                 self.useEMA = False if 'y' not in str(parser.get('config', 'useEMA')).lower() else True
             except configparser.NoOptionError:
                 input(colorText.BOLD + colorText.FAIL +
-                      '[+] Screenipy requires user configuration again. Press enter to continue..' + colorText.END)
+                      '[+] pkscreener requires user configuration again. Press enter to continue..' + colorText.END)
                 parser.remove_section('config')
                 self.setConfig(parser, default=False)
         else:
@@ -187,7 +187,7 @@ class tools:
     # Print config file
     def showConfigFile(self):
         try:
-            f = open('screenipy.ini', 'r')
+            f = open('pkscreener.ini', 'r')
             print(colorText.BOLD + colorText.GREEN +
                   '[+] Screeni-py User Configuration:' + colorText.END)
             print("\n"+f.read())
@@ -203,7 +203,7 @@ class tools:
     # Check if config file exists
     def checkConfigFile(self):
         try:
-            f = open('screenipy.ini','r')
+            f = open('pkscreener.ini','r')
             f.close()
             return True
         except FileNotFoundError:

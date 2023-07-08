@@ -18,7 +18,7 @@ changelog = colorText.BOLD + '[ChangeLog]\n' + colorText.END + colorText.BLUE + 
 1. Inside Bar detection added.
 2. OTA Software Update Implemented.
 3. Stock shuffling added while screening
-4. Results will be now also stored in the excel (screenipy-result.xlsx) file.
+4. Results will be now also stored in the excel (pkscreener-result.xlsx) file.
 5. UI cosmetic updates for pretty-printing!
 
 [1.02]
@@ -153,7 +153,7 @@ changelog = colorText.BOLD + '[ChangeLog]\n' + colorText.END + colorText.BLUE + 
 [1.32]
 1. Performance Optimization.
 2. Minor Improvements.
-3. Argument added for Data download only : run screenipy.exe -d
+3. Argument added for Data download only : run pkscreener.exe -d
 
 [1.33]
 1. Alternate Data source added.

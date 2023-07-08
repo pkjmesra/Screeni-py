@@ -228,7 +228,7 @@ class tools:
                 print(colorText.BOLD + colorText.FAIL +
                       "[+] After-Market Stock Data is not cached.." + colorText.END)
                 print(colorText.BOLD + colorText.GREEN +
-                      "[+] Downloading cache from Screenipy server for faster processing, Please Wait.." + colorText.END)
+                      "[+] Downloading cache from pkscreener server for faster processing, Please Wait.." + colorText.END)
                 try:
                     chunksize = 1024*1024*1
                     filesize = int(int(resp.headers.get('content-length'))/chunksize)
@@ -249,7 +249,7 @@ class tools:
                 tools.loadStockData(stockDict, configManager, proxyServer)
             else:
                 print(colorText.BOLD + colorText.FAIL +
-                      "[+] Cache unavailable on Screenipy server, Continuing.." + colorText.END)
+                      "[+] Cache unavailable on pkscreener server, Continuing.." + colorText.END)
 
     # Save screened results to excel
     def promptSaveResults(df, defaultAnswer=None):

@@ -10,7 +10,6 @@ __pycache__/
 .DS_Store
 Help
 *.h5
-*.ini
 *.env
 *.dev
 *.png

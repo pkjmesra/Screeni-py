@@ -4,7 +4,7 @@
 # Description         :   Workflow for CI - Testing source and PR main for release
 
 
-name: Screenipy Test - New Features
+name: pkscreener Test - New Features
 
 on:
   push:
@@ -82,9 +82,9 @@ jobs:
       with:
         source_branch: "new-features"
         destination_branch: "main"
-        pr_title: "[Screenipy Test] New Features Added - Test Passed"
+        pr_title: "[pkscreener Test] New Features Added - Test Passed"
         pr_body: |
-          **This PR has been generated automatically** by **Screenipy Test - New Features** workflow due to test passed for a latest push on the **new-features** branch.
+          **This PR has been generated automatically** by **pkscreener Test - New Features** workflow due to test passed for a latest push on the **new-features** branch.
           
           View commits for changelog.
         pr_label: "Test-Passed"

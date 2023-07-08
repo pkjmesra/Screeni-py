@@ -1,9 +1,9 @@
 # Project             :   Screenipy
 # Author              :   Pranjal Joshi
 # Created             :   30/04/2021
-# Description         :   Workflow for building screenipy on pushing a tag
+# Description         :   Workflow for building pkscreener on pushing a tag
 
-name: Screenipy Build - New Release
+name: pkscreener Build - New Release
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
           - os: windows-latest
             TARGET: Windows
             CMD_BUILD: |
-              pyinstaller --onefile --icon=src\icon.ico src\screenipy.py  --hidden-import cmath --hidden-import talib.stream --hidden-import numpy --hidden-import pandas --hidden-import alive-progress --hidden-import alive_progress --hidden-import yfinance
+              pyinstaller --onefile --icon=src\icon.ico src\pkscreener.py  --hidden-import cmath --hidden-import talib.stream --hidden-import numpy --hidden-import pandas --hidden-import alive-progress --hidden-import alive_progress --hidden-import yfinance
             DEP_BUILD: |
               python -m pip install --upgrade pip
               echo Installing TA-lib...
@@ -36,17 +36,17 @@ jobs:
               python -m pip install --upgrade pip
               pip install -r requirements.txt
             TEST_BUILD: |
-              ./dist/screenipy.exe --testbuild
+              ./dist/pkscreener.exe --testbuild
               exit $?
-            OUT_PATH: .\dist\screenipy.exe
-            FILE_NAME: screenipy.exe
+            OUT_PATH: .\dist\pkscreener.exe
+            FILE_NAME: pkscreener.exe
           
           - os: ubuntu-20.04
             TARGET: Linux
             CMD_BUILD: |
-              pyinstaller --onefile --icon=src/icon.ico src/screenipy.py  --hidden-import cmath --hidden-import talib.stream --hidden-import numpy --hidden-import pandas --hidden-import alive-progress --hidden-import alive_progress
-              mv /home/runner/work/Screeni-py/Screeni-py/dist/screenipy /home/runner/work/Screeni-py/Screeni-py/dist/screenipy.bin
-              chmod +x /home/runner/work/Screeni-py/Screeni-py/dist/screenipy.bin
+              pyinstaller --onefile --icon=src/icon.ico src/pkscreener.py  --hidden-import cmath --hidden-import talib.stream --hidden-import numpy --hidden-import pandas --hidden-import alive-progress --hidden-import alive_progress
+              mv /home/runner/work/Screeni-py/Screeni-py/dist/pkscreener /home/runner/work/Screeni-py/Screeni-py/dist/pkscreener.bin
+              chmod +x /home/runner/work/Screeni-py/Screeni-py/dist/pkscreener.bin
             DEP_BUILD: |
               cd .github/dependencies/
               pwd
@@ -60,26 +60,26 @@ jobs:
               pip install -r requirements.txt
               pip install ta-lib==0.4.24
             TEST_BUILD: |
-              /home/runner/work/Screeni-py/Screeni-py/dist/screenipy.bin --testbuild
+              /home/runner/work/Screeni-py/Screeni-py/dist/pkscreener.bin --testbuild
               exit $?
-            OUT_PATH: /home/runner/work/Screeni-py/Screeni-py/dist/screenipy.bin
-            FILE_NAME: screenipy.bin
+            OUT_PATH: /home/runner/work/Screeni-py/Screeni-py/dist/pkscreener.bin
+            FILE_NAME: pkscreener.bin
 
           - os: macos-latest
             TARGET: MacOS
             CMD_BUILD: |
-              pyinstaller --onefile --windowed --icon=src/icon.ico src/screenipy.py  --hidden-import cmath --hidden-import talib.stream --hidden-import numpy --hidden-import pandas --hidden-import alive-progress --hidden-import alive_progress
-              mv /Users/runner/work/Screeni-py/Screeni-py/dist/screenipy /Users/runner/work/Screeni-py/Screeni-py/dist/screenipy.run
+              pyinstaller --onefile --windowed --icon=src/icon.ico src/pkscreener.py  --hidden-import cmath --hidden-import talib.stream --hidden-import numpy --hidden-import pandas --hidden-import alive-progress --hidden-import alive_progress
+              mv /Users/runner/work/Screeni-py/Screeni-py/dist/pkscreener /Users/runner/work/Screeni-py/Screeni-py/dist/pkscreener.run
             DEP_BUILD: |
               brew install ta-lib
               python -m pip install --upgrade pip
               pip install -r requirements.txt
               pip install ta-lib==0.4.24
             TEST_BUILD: |
-              /Users/runner/work/Screeni-py/Screeni-py/dist/screenipy.run --testbuild
+              /Users/runner/work/Screeni-py/Screeni-py/dist/pkscreener.run --testbuild
               exit $?
-            OUT_PATH: /Users/runner/work/Screeni-py/Screeni-py/dist/screenipy.run
-            FILE_NAME: screenipy.run
+            OUT_PATH: /Users/runner/work/Screeni-py/Screeni-py/dist/pkscreener.run
+            FILE_NAME: pkscreener.run
           
     steps:
       - uses: actions/checkout@v2
@@ -139,7 +139,7 @@ jobs:
           file: ${{ matrix.OUT_PATH }}
           asset_name: ${{ matrix.FILE_NAME }}
           tag: ${{ github.ref }}
-          release_name: Screenipy - v${{ steps.get_version.outputs.VERSION }}
+          release_name: pkscreener - v${{ steps.get_version.outputs.VERSION }}
           body: |
             ${{ steps.read_release.outputs.RELEASE_BODY }}
           overwrite: true
