@@ -6,10 +6,11 @@ __pycache__/
 .vscode/
 *.xlsx
 *.pkl
-*.spec
+# *.spec
 .DS_Store
 Help
 *.h5
+# *.ini
 *.env
 *.dev
 *.png
